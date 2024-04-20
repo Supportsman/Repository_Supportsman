@@ -1,0 +1,265 @@
+
+#include<iostream>﻿
+#include <SFML/Graphics.hpp>
+
+float Hast(float a)
+{
+    int r = rand() % 2 + 1;
+    int b = a * 0.2;
+    if (r == 1)
+    {
+        return a + b;
+    }
+    else
+    {
+        return a - b;
+    }
+
+}
+
+int main()
+{
+    sf::RenderWindow window(sf::VideoMode(1000, 600), "SFML Shapes");
+    sf::seconds(2);
+    // Создание трёх различных фигур
+    sf::CircleShape circle(50);
+    circle.setFillColor(sf::Color::Red);
+    circle.setPosition(100, 100);
+    float start_circleSpeedX = 1000;
+    float start_circleSpeedY = 0;
+    float circleSpeedX = 100;
+    float circleSpeedY = 10;
+
+    sf::RectangleShape rectangle(sf::Vector2f(100, 80));
+    rectangle.setFillColor(sf::Color::Green);
+    rectangle.setPosition(300, 200);
+    float rectangleSpeedX = 100;
+    float rectangleSpeedY = 50;
+    float start_rectangleSpeedX = 0.020;
+    float start_rectangleSpeedY = 0.025;
+
+    sf::ConvexShape triangle;
+    triangle.setPointCount(3);
+    triangle.setPoint(0, sf::Vector2f(0, 0));
+    triangle.setPoint(1, sf::Vector2f(100, 0));
+    triangle.setPoint(2, sf::Vector2f(50, 100));
+    triangle.setFillColor(sf::Color::Blue);
+    triangle.setPosition(500, 300);
+    float start_triangleSpeedX = 0.220;
+    float start_triangleSpeedY = 0.1;
+    float triangleSpeedX = 100;
+    float triangleSpeedY = 50;
+
+
+
+    window.clear();
+    window.draw(circle);
+    window.draw(rectangle);
+    window.draw(triangle);
+    window.display();
+    sf::sleep(sf::milliseconds(1000));
+
+    sf::Clock clock;
+
+    while (window.isOpen())
+    {
+        sf::Time deltaTime = clock.restart();
+
+        sf::Event event;
+
+
+
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        // Движение фигур
+        float x_s = circle.getPosition().x + circleSpeedX;
+        float y_s = circle.getPosition().y + circleSpeedY;
+
+        if (x_s + circle.getRadius() * 2 >= window.getSize().x)
+        {
+            x_s = window.getSize().x - circle.getRadius() * 2;
+            circleSpeedX = -circleSpeedX;
+        }
+        if (x_s <= 0)
+        {
+            x_s = 0;
+            circleSpeedX = -circleSpeedX;
+        }
+
+        if (y_s + circle.getRadius() * 2 >= window.getSize().y)
+        {
+            y_s = window.getSize().y - circle.getRadius() * 2;
+            circleSpeedY = -circleSpeedY;
+        }
+        if (y_s <= 0)
+        {
+            y_s = 0;
+            circleSpeedY = -circleSpeedY;
+        }
+
+        circle.setPosition(x_s, y_s);
+
+        /*if (x_s + circle.getRadius() * 2 >= window.getSize().x || circle.getPosition().x <= 0) // правый край круга >= стенки или левый край <= левый край круга
+        {
+
+            circleSpeedX = -circleSpeedX;
+
+            if (5 * start_circleSpeedX > abs(circleSpeedX))
+            {
+                circleSpeedX = circleSpeedX + Hast(circleSpeedX);
+            }
+
+
+            circle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+
+
+        }
+        else if (circle.getPosition().x + circle.getRadius() * 2 + circleSpeedX >= window.getSize().x || circle.getPosition().x + circleSpeedX <= 0) // правый край круга + скорость >= стенки или левый край <= левый край круга + скорость
+        {
+            circleSpeedX = -(circleSpeedX - (window.getSize().x - circle.getPosition().x + circle.getRadius() * 2));
+        }
+
+        if (circle.getPosition().y + circle.getRadius() * 2 >= window.getSize().y || circle.getPosition().y <= 0)
+        {
+            circleSpeedY = -circleSpeedY;
+
+            if (5 * start_circleSpeedY > abs(circleSpeedY))
+            {
+                circleSpeedY = circleSpeedY + Hast(circleSpeedY);
+            }
+
+            circle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+        }*/
+
+        //новый код нч
+
+        float x_s2 = rectangle.getPosition().x + rectangleSpeedX;
+        float y_s2 = rectangle.getPosition().y + rectangleSpeedY;
+
+        if (x_s2 + rectangle.getSize().x >= window.getSize().x)
+        {
+            x_s2 = window.getSize().x - rectangle.getSize().x;
+            rectangleSpeedX = -rectangleSpeedX;
+        }
+        if (x_s2 <= 0)
+        {
+            x_s2 = 0;
+            rectangleSpeedX = -rectangleSpeedX;
+        }
+
+        if (y_s2 + rectangle.getSize().x >= window.getSize().y)
+        {
+            y_s2 = window.getSize().y - rectangle.getSize().x;
+            rectangleSpeedY = -rectangleSpeedY;
+        }
+        if (y_s2 <= 0)
+        {
+            y_s2 = 0;
+            rectangleSpeedY = -rectangleSpeedY;
+        }
+
+        rectangle.setPosition(x_s2, y_s2);
+
+        //новый код кц
+
+
+        float x_s3 = triangle.getPosition().x + triangleSpeedX;
+        float y_s3 = triangle.getPosition().y + triangleSpeedY;
+
+        if (x_s3 + triangle.getPosition().y + 100 >= window.getSize().x)
+        {
+            x_s3 = window.getSize().x - triangle.getPosition().y + 100;
+            triangleSpeedX = -triangleSpeedX;
+        }
+        if (x_s3 <= 0)
+        {
+            x_s3 = 0;
+            triangleSpeedX = -triangleSpeedX;
+        }
+
+        if (y_s3 + triangle.getPosition().y + 100 >= window.getSize().y)
+        {
+            y_s3 = window.getSize().y - rectangle.getSize().x;
+            triangleSpeedY = -triangleSpeedY;
+        }
+        if (y_s3 <= 0)
+        {
+            y_s3 = 0;
+            triangleSpeedY = -triangleSpeedY;
+        }
+
+        triangle.setPosition(x_s3, y_s3);
+
+
+
+
+
+
+  
+        // rwrwtrwr
+       /* rectangle.move(rectangleSpeedX, rectangleSpeedY);
+        if (rectangle.getPosition().x + rectangle.getSize().x >= window.getSize().x || rectangle.getPosition().x <= 0)
+        {
+            rectangleSpeedX = -rectangleSpeedX;
+
+            if (5 * start_rectangleSpeedX > abs(rectangleSpeedX))
+            {
+                rectangleSpeedX = rectangleSpeedX + Hast(rectangleSpeedX);
+            }
+
+            rectangle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+        }
+        if (rectangle.getPosition().y + rectangle.getSize().y >= window.getSize().y || rectangle.getPosition().y <= 0)
+        {
+            rectangleSpeedY = -rectangleSpeedY;
+
+            if (5 * start_rectangleSpeedY > abs(rectangleSpeedY))
+            {
+                rectangleSpeedY = rectangleSpeedY + Hast(rectangleSpeedY);
+            };
+
+
+            rectangle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+        }*/
+
+
+        
+        /*if (triangle.getPosition().x + 100 >= window.getSize().x || triangle.getPosition().x <= 0)
+        {
+            triangleSpeedX = -triangleSpeedX;
+
+            if (5 * start_triangleSpeedX > abs(triangleSpeedX))
+            {
+                triangleSpeedX = triangleSpeedX + Hast(triangleSpeedX);
+            }
+
+            triangle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+        }
+        if (triangle.getPosition().y + 100 >= window.getSize().y || triangle.getPosition().y <= 0)
+        {
+            triangleSpeedY = -triangleSpeedY;
+
+            if (5 * start_triangleSpeedX > abs(triangleSpeedX))
+            {
+                triangleSpeedY = triangleSpeedY + Hast(triangleSpeedY);
+            }
+
+            triangle.setFillColor(sf::Color(rand() % 256, rand() % 256, rand() % 256));
+        }*/
+       /* triangle.move(triangleSpeedX, triangleSpeedY);*/
+
+
+        window.clear();
+        window.draw(circle);
+        window.draw(rectangle);
+        window.draw(triangle);
+        window.display();
+
+    }
+
+    return 0;
+}
