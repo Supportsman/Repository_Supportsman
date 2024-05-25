@@ -1,0 +1,94 @@
+#include <iostream>
+#include <cmath>
+#include <math.h>
+
+
+// Класс точек
+class Point {
+public:
+
+    // Поля х и у
+    int x, y;
+
+    Point(int x_, int y_) : x(x_), y(y_) {}
+};
+
+
+// Класс фигуры
+class Figure {
+
+    // поля передаваемые наследникам
+protected:
+    std::string color;
+
+public:
+    Figure(std::string color_) : color(color_) {}
+    // Будут определены функции в классах наследниках
+    virtual void info() = 0;
+    virtual double area() = 0;
+    virtual ~Figure() {}
+};
+
+// Класс наследник фигуры - правильный треугольник
+class RightTriangle : public Figure {
+
+    // Приватные поля - 3 точки A, B, C
+private:
+    Point A, B, C;
+
+
+public:
+    RightTriangle(Point A_, Point B_, Point C_, std::string color_)
+        : Figure(color_), A(A_), B(B_), C(C_) {}
+
+
+    void info() override {
+        std::cout << "Прямоугольный треугольник" << std::endl;
+        std::cout << "Цвет: " << color << std::endl;
+        std::cout << "Координаты: A(" << A.x << "," << A.y << "), B(" << B.x << "," << B.y << "), C(" << C.x << "," << C.y << ")" << std::endl;
+        std::cout << "Площадь: " << area() << std::endl;
+    }
+
+    double area() override {
+        return 0.5 * std::abs((A.x - C.x) * (B.y - C.y) - (B.x - C.x) * (A.y - C.y));
+    }
+};
+
+class Circle : public Figure {
+private:
+    Point O, A;
+
+public:
+    Circle(Point O_, Point A_, std::string color_)
+        : Figure(color_), O(O_), A(A_) {}
+
+    void info() override {
+        std::cout << "Круг" << std::endl;
+        std::cout << "Цвет: " << color << std::endl;
+        std::cout << "Центр: O(" << O.x << "," << O.y << ")" <<  /*"), Point on the circle: A(" << A.x << "," << A.y << ")" <<*/ std::endl;
+        std::cout << "Площадь: " << area() << std::endl;
+    }
+
+    double area() override {
+        return acos(-1) * pow(sqrt(pow(A.x - O.x, 2) + pow(A.y - O.y, 2)), 2);
+    }
+};
+
+void FigureInfo(Figure* figure) {
+    figure->info();
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+
+    Point A(1, 4), B(1, 1), C(5, 1);
+    Point O(0, 0), D(3, 4);
+
+    RightTriangle triangle(A, B, C, "Красный");
+    Circle circle(O, D, "Синий");
+
+    FigureInfo(&triangle);
+    FigureInfo(&circle);
+
+    return 0;
+}
