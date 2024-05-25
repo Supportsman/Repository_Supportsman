@@ -1,0 +1,31 @@
+// 6lab2sem.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+//
+
+#include <iostream>
+#include <Triangle.hpp>
+#include <Circle.hpp>
+#include <FigureInfo.hpp>
+
+int main()
+{
+    setlocale(LC_ALL, "Rus");
+    
+
+    const int numFigures = 4;
+    Figure* figures[numFigures]
+
+    figures[0] = new RightTriangle("Красный", Point(0, 0), Point(3, 0), Point(0, 4));
+    figures[1] = new RightTriangle("Синий", Point(0, 0), Point(3, 0), Point(0, 4));
+    figures[2] = new Circle("Белый", Point(1, 1), 2.5);
+    figures[3] = new Circle("Чёрный", Point(2, 2), 3.0);
+
+
+    for (int i = 0; i < numFigures; i++)
+        FigureInfo(*figures[i]);
+
+    for (int i = 0; i < numFigures; ++i)
+        delete figures[i];
+
+    return 0;
+}
+
