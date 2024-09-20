@@ -1,0 +1,61 @@
+#include <iostream>
+#include <stack>
+#include <string>
+
+bool isValid(const std::string& str) {
+	// Создание стека типа чар
+	std::stack<char> s;
+
+	// Проходимся по стеку
+	for (char c : str) {
+		if (c == '(' || c == '{' || c == '[') {
+			s.push(c);
+			// Если встречается открывающая скобка, добавляем элемент в стек
+		}
+		else if (c == ')' || c == '}' || c == ']') {
+			if (s.empty()) {
+				// Если пусто, ложь
+				return false;
+			}
+			char top = s.top();
+			// Присваиваем верхний элемент
+			if ((c == ')' && top == '(') ||
+				(c == '}' && top == '{') ||
+				(c == ']' && top == '[')) {
+				// Если элемент закрывает соответствующую скобку, удаляем элемент
+				s.pop();
+			}
+			else {
+				return false;
+				// Ложь, если не соответствие условиям
+			}
+		}
+	}
+
+	return s.empty();
+	// Пустой?
+}
+
+int main() {
+	setlocale(LC_ALL, "Russian");
+	std::string input;
+	std::cout << "Введите строку: ";
+	std::getline(std::cin, input);
+
+	if (input.empty()) {
+		std::cout << "Строка не существует" << std::endl;
+		// Пустая?
+	}
+	else {
+		if (isValid(input)) {
+			std::cout << "Строка существует" << std::endl;
+			// Если пустой, строка есть
+		}
+		else {
+			std::cout << "Строка не существует" << std::endl;
+			// Если не пустой, строки нет
+		}
+	}
+
+	return 0;
+}
