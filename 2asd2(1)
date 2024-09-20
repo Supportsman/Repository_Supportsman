@@ -3,21 +3,21 @@
 #include <string>
 #include <cctype>
 #include <sstream>
-#include <stdexcept>
+
 
 using namespace std;
 
 // Функция для вычисления двух чисел с оператором
 double applyOperation(double a, double b, char op) {
     switch (op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/':
-            if (b == 0) {
-                throw runtime_error("Ошибка: деление на 0!");
-            }
-            return a / b;
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/':
+        if (b == 0) {
+            throw runtime_error("Ошибка: деление на 0!");
+        }
+        return a / b;
     }
     return 0;
 }
@@ -86,12 +86,13 @@ double evaluate(string tokens) {
 }
 
 // Проверка правильности расстановки скобок
-bool areParenthesesBalanced(const string& expression) {
+bool isValid(const string& expression) {
     stack<char> s;
     for (char ch : expression) {
         if (ch == '(') {
             s.push(ch);
-        } else if (ch == ')') {
+        }
+        else if (ch == ')') {
             if (s.empty()) return false;
             s.pop();
         }
@@ -99,7 +100,10 @@ bool areParenthesesBalanced(const string& expression) {
     return s.empty();
 }
 
+
+
 int main() {
+    setlocale(LC_ALL, "Russian");
     string expression;
 
     cout << "Введите математическое выражение (окончание '='): ";
@@ -108,13 +112,14 @@ int main() {
     // Удаляем символ '=' в конце
     if (expression.back() == '=') {
         expression.pop_back();
-    } else {
+    }
+    else {
         cout << "Ошибка: выражение должно заканчиваться на '='!" << endl;
         return 1;
     }
 
     // Проверяем корректность расстановки скобок
-    if (!areParenthesesBalanced(expression)) {
+    if (!isValid(expression)) {
         cout << "Ошибка: неправильно расставлены скобки!" << endl;
         return 1;
     }
@@ -122,9 +127,16 @@ int main() {
     try {
         double result = evaluate(expression);
         cout << "Результат: " << result << endl;
-    } catch (const runtime_error& e) {
+    }
+    catch (const runtime_error& e) {
         cout << e.what() << endl;
     }
 
     return 0;
 }
+
+/*
+На вход подаётся математическое выражение. Элементы - числа. Операции "+-*\n/" Также есть скобочки. Окончанием выражения служит"=". Программа должна вывести результат выражения.
+Пример ввода: 2+7*(3.9)-5=
+Замечание: программа также должна делать "Проверку на дурака": нет деления на 0, все скобки стоят верно
+*/
