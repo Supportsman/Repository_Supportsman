@@ -1,0 +1,130 @@
+#include <iostream>
+#include <stack>
+#include <string>
+#include <cctype>
+#include <sstream>
+#include <stdexcept>
+
+using namespace std;
+
+// Функция для вычисления двух чисел с оператором
+double applyOperation(double a, double b, char op) {
+    switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/':
+            if (b == 0) {
+                throw runtime_error("Ошибка: деление на 0!");
+            }
+            return a / b;
+    }
+    return 0;
+}
+
+// Функция для определения приоритета операции
+int precedence(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return 0;
+}
+
+// Основная функция для вычисления выражения
+double evaluate(string tokens) {
+    stack<double> values;
+    stack<char> ops;
+
+    for (size_t i = 0; i < tokens.length(); i++) {
+        // Пропустить пробелы
+        if (tokens[i] == ' ') continue;
+
+        // Если токен - число, добавить его в стек
+        if (isdigit(tokens[i])) {
+            double val = 0;
+            while (i < tokens.length() && isdigit(tokens[i])) {
+                val = (val * 10) + (tokens[i] - '0');
+                i++;
+            }
+            values.push(val);
+            i--; // Отменить увеличение i в конце цикла
+        }
+        // Если токен - открывающая скобка
+        else if (tokens[i] == '(') {
+            ops.push(tokens[i]);
+        }
+        // Если токен - закрывающая скобка
+        else if (tokens[i] == ')') {
+            while (!ops.empty() && ops.top() != '(') {
+                double val2 = values.top(); values.pop();
+                double val1 = values.top(); values.pop();
+                char op = ops.top(); ops.pop();
+                values.push(applyOperation(val1, val2, op));
+            }
+            if (!ops.empty()) ops.pop(); // Убираем открывающую скобку
+        }
+        // Если токен - оператор
+        else {
+            while (!ops.empty() && precedence(ops.top()) >= precedence(tokens[i])) {
+                double val2 = values.top(); values.pop();
+                double val1 = values.top(); values.pop();
+                char op = ops.top(); ops.pop();
+                values.push(applyOperation(val1, val2, op));
+            }
+            ops.push(tokens[i]);
+        }
+    }
+
+    // Обрабатываем оставшиеся операции
+    while (!ops.empty()) {
+        double val2 = values.top(); values.pop();
+        double val1 = values.top(); values.pop();
+        char op = ops.top(); ops.pop();
+        values.push(applyOperation(val1, val2, op));
+    }
+
+    return values.top();
+}
+
+// Проверка правильности расстановки скобок
+bool areParenthesesBalanced(const string& expression) {
+    stack<char> s;
+    for (char ch : expression) {
+        if (ch == '(') {
+            s.push(ch);
+        } else if (ch == ')') {
+            if (s.empty()) return false;
+            s.pop();
+        }
+    }
+    return s.empty();
+}
+
+int main() {
+    string expression;
+
+    cout << "Введите математическое выражение (окончание '='): ";
+    getline(cin, expression);
+
+    // Удаляем символ '=' в конце
+    if (expression.back() == '=') {
+        expression.pop_back();
+    } else {
+        cout << "Ошибка: выражение должно заканчиваться на '='!" << endl;
+        return 1;
+    }
+
+    // Проверяем корректность расстановки скобок
+    if (!areParenthesesBalanced(expression)) {
+        cout << "Ошибка: неправильно расставлены скобки!" << endl;
+        return 1;
+    }
+
+    try {
+        double result = evaluate(expression);
+        cout << "Результат: " << result << endl;
+    } catch (const runtime_error& e) {
+        cout << e.what() << endl;
+    }
+
+    return 0;
+}
