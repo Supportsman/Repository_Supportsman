@@ -1,0 +1,41 @@
+#include <iostream>
+#include <cmath>
+
+double f(double x) {
+	return 0.8 * (x + 2) - 3 * cos(0.7 * x) + 2;
+}
+
+int main() {
+	setlocale(LC_ALL, "Russian");
+	double L = -10;
+	double R = -10;
+
+	// Поиск R таким образом, чтобы f(L) < 0 и f(R) > 0
+	while (f(R) <= 0) {
+		R += 0.5;
+	}
+
+	double M;
+	double E;
+	double Eps = 1.0; // начальное значение для Eps
+	double precision = 0.001; // точность
+	int iterations = 0;
+
+	// Метод половинного деления
+	while (Eps >= precision) {
+		M = (L + R) / 2;
+		Eps = fabs(f(M));
+		iterations++;
+
+		if (f(M) < 0) {
+			L = M; // сдвигаем левую границу
+		}
+		else {
+			R = M; // сдвигаем правую границу
+		}
+	}
+
+	std::cout << "{M=" << M << "; k=" << iterations << "; Eps=" << Eps << "}" << std::endl;
+
+	return 0;
+}
