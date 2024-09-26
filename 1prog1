@@ -1,0 +1,80 @@
+/*
+
+Вариант 2
+Формула: 0,8(x + 2) - 3cos(0,7x) + 2
+Метод половинного деления
+Пусть дано уравнение f(x)=0. Числа L и R такие, что f(L) < 0 + f(R) > 0 или f(L) > 0 + f(R) < 0 (На примере 1го случая). Рассмотрим значение функции в точке M=(L+R)/2 - середина интервала. Если f(M)<0, то сдвигаем левую границу L=M, иначе
+- сдвигаем правую границу R=M. Повторяем пока не достингем заданной точности E. Точность по формуле |f(M)|<E. Успех M - корень уравнения f(x)=0 с точность E=0,01/0,001
+В программе L= -10 , а R найти автоматически циклом от -10 с шагом 0,5. Посчитать количество итераций в поиске корня
+
+*/
+#include <iostream>
+#include <cmath>
+#include <string>
+
+using namespace std;
+
+// Функция для вычисления значения формулы
+double EvaluateFormula(const string& formula, double x) {
+	// Реализуйте логику вычисления значения формулы для заданного x
+
+	return pow(x, 2) + 2*x - 3;
+}
+
+// Функция для поиска корня методом половинного деления
+double FindRoot(const string& formula, double a, double b, double epsilon) {
+	// Проверка на начальные условия:
+	if (EvaluateFormula(formula, a) < 0 && EvaluateFormula(formula, b) >= 0) {
+		cout << "Ошибка: Начальные точки должны быть по разные стороны от корня." << endl;
+		return -1; // Возвращаем -1 для индикации ошибки
+	}
+
+	while (abs(b - a) > epsilon) {
+		double c = (a + b) / 2;
+		if (EvaluateFormula(formula, c) == 0) {
+			return c; // Точный корень найден
+		}
+		else if (EvaluateFormula(formula, a) >= 0 && EvaluateFormula(formula, c) < 0) {
+			b = c; // Корень находится в левой половине
+		}
+		else {
+			a = c; // Корень находится в правой половине
+		}
+	}
+
+	return (a + b) / 2; // Возвращаем среднюю точку как приближение корня
+}
+
+int main() {
+	setlocale(LC_ALL, "Russian");
+
+	string formula;
+	double a, b, epsilon;
+
+	cout << "0,8(x + 2) - 3cos(0,7x) + 2" << endl;
+	
+	/*cout << "Введите формулу: ";
+	getline(cin, formula);*/
+	formula = "0,8(x+2)-3cos(0,7x)+2";
+
+	cout << "Введите начальную точку a: ";
+	cin >> a;
+
+	cout << "Введите начальную точку b: ";
+	cin >> b;
+
+	cout << "Введите точность epsilon: ";
+	cin >> epsilon;
+
+	double root = FindRoot(formula, a, b, epsilon);
+
+	if (root >= 0) {
+		cout << "Приближенный корень: " << root << endl;
+	}
+	else
+	{
+		cout << "Отрицательнай корень!!! аааааа: " << root << endl;
+	}
+
+	return 0;
+}
