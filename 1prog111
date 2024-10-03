@@ -1,0 +1,56 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+
+double f(double x) {
+    return 0.8 * (x + 2) - 3 * cos(0.7 * x) + 2;
+}
+
+
+struct Answer {
+    double root;      
+    int iterations;   
+    double ValueF; // значение функции в корне
+};
+
+// Функция для метода половинного деления
+Answer MetPolDel(double Eps) {
+    double L = -10; // начальная левая граница
+    double R = -10; // начальная правая граница
+
+    // Ищем правую границу R, пока f(R) не станет положительным
+    while (f(R) <= 0) {
+        R += 0.5;
+    }
+
+    double M;
+    int iterations = 0; // счетчик итераций
+
+    
+    while (fabs(f(M = (L + R) / 2)) >= Eps) {
+        iterations++; 
+        if (f(M) < 0) {
+            L = M; // сдвигаем левую границу
+        }
+        else {
+            R = M; // сдвигаем правую границу
+        }
+    }
+
+    // Возвращаем структуру с результатами
+    return { M, iterations, f(M) };
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    double Eps = 0.01; 
+    Answer result = MetPolDel(Eps);
+
+    cout << "Найденный корень: " << result.root << endl;
+    cout << "Количество итераций: " << result.iterations << endl;
+    cout << "Значение функции в корне: " << result.ValueF << endl;
+
+    return 0;
+}
