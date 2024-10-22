@@ -1,0 +1,134 @@
+#include <iomanip>
+#include <iostream>
+#include <cmath>
+#include <locale>
+
+using namespace std;
+
+double f(double x) {
+return 0.8 * (x + 2) - 3 * cos(0.7 * x) + 2;
+}
+
+struct MyStruct {
+double M, Ep, k;
+
+MyStruct(): M(0), Ep(0), k(0) {}
+MyStruct(double m, double ep, double _k): M(m), Ep(ep), k(_k) {}
+
+};
+
+MyStruct MetPolDel(double E) {
+double L = -10;
+double R = 0;
+
+while (f(L) * f(R) >= 0) {
+R += 0.5;
+if (R > 100) {
+cout « "Нет" « std::endl;
+return MyStruct();
+}
+}
+
+double M1;
+float k1 = 0;
+double Ep1;
+
+while (true) {
+M1 = (L + R) / 2;
+Ep1 = fabs(f(M1));
+k1++;
+
+if (Ep1 < E) {
+break;
+}
+
+if (f(L) * f(M1) > 0) {
+L = M1;
+}
+else {
+R = M1;
+}
+}
+
+return MyStruct(M1,Ep1,k1);
+}
+
+MyStruct MetSec(double E) {
+double L = 0;
+double R = 0;
+
+while (f(L) * f(R) >= 0) {
+R += 0.5;
+L -= 0.5;
+if (R > 100) {
+cout « "Отсуствует" « std::endl;
+return MyStruct();
+}
+}
+
+double M2;
+float k2 = 0;
+double Ep2;
+
+while (true) {
+M2 = R - (f(R) * (R - L)) / (f(R) - f(L));
+Ep2 = fabs(f(M2));
+k2++;
+
+if (Ep2 < E) {
+break;
+}
+
+if (f(L) * f(M2) > 0) {
+L = M2;
+}
+else {
+R = M2;
+}
+}
+
+return MyStruct(M2,Ep2,k2);
+}
+
+void main() {
+setlocale(0, "");
+
+double epsilons[] = { 0.1, 0.01, 0.0001 };
+
+cout « setw(5) « "Метод"
+« setw(25) « "E=0.1"
+« setw(25) « "E=0.01"
+« setw(35) « "E=0.0001" « endl;
+cout « string(100, '-') « endl;
+
+cout « setw(5) « "Пол деление";
+for (double epsilon : epsilons) {
+MyStruct result = MetPolDel(epsilon);
+cout « setw(16) « result.M « "," « result.k « "," « result.Ep;
+}
+cout « endl;
+cout « string(100, '-') « endl;
+
+cout « setw(5) « "Секущией ";
+for (double epsilon : epsilons) {
+MyStruct result = MetSec(epsilon);
+cout « setw(16) « result.M « "," « result.k « "," « result.Ep;
+}
+cout « endl;
+
+cout « string(100, '-') « endl;
+cout « setw(5) « "k1/k2";
+for (double epsilon : epsilons) {
+MyStruct result1 = MetPolDel(epsilon);
+MyStruct result2 = MetSec(epsilon);
+
+if (result2.k != 0) {
+cout « setw(28) « result1.k / result2.k;
+}
+else {
+cout « setw(18) « "Нет";
+}
+}
+cout « endl;
+
+}
