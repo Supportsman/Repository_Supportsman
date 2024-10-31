@@ -1,23 +1,30 @@
+// Очередь изнутри - видим только первого - хед
+
+
 #include <iostream>
 #include <string>
 
-class Node {
+
+// Элемент односвязного списка
+#pragma pack(1)
+struct Node {
 public:
     std::string data;
-    Node* next;
+    Node* next; // Указатель на следующий элемент
 
     Node(const std::string& value) : data(value), next(nullptr) {}
 };
-
+#pragma pack()
+// Очередь
 class Queue {
 private:
-    Node* head;
-    Node* tail;
+    Node* head; // первый элемент
+    //Node* tail; // последний
 
 public:
-    Queue() : head(nullptr), tail(nullptr) {}
-
-    ~Queue() {
+    Queue() : head(nullptr){}
+    
+    ~Queue() { // Удалить все элементы очереди пока хед не нульптр
         while (head) {
             Node* temp = head;
             head = head->next;
@@ -26,33 +33,44 @@ public:
     }
 
     // Метод добавления элемента в конец очереди
-    void enqueue(const std::string& value) {
+    void add(const std::string& value) {
         Node* newNode = new Node(value);
         if (!head) {
-            head = tail = newNode;
-        } else {
-            tail->next = newNode;
-            tail = newNode;
+            head = newNode;
+        }
+        else {
+            Node* current = head;
+            while (current->next) {
+                current = current->next;
+            }
+            current->next = newNode;
         }
     }
 
-    // Метод извлечения элемента из начала очереди
-    std::string dequeue() {
-        if (!head) {
-            throw std::runtime_error("Queue is empty.");
-        }
+    // Метод извлечения элемента из начала очереди                        добавить просмотр первого эл
+    std::string deq() {
+        
+        smotrFirstEl();
+
         std::string value = head->data;
         Node* temp = head;
         head = head->next;
         delete temp;
-        if (!head) {
-            tail = nullptr;
-        }
+        
         return value;
     }
 
+    std::string smotrFirstEl() const {
+
+        if (!head) {
+            std::cout << "Очередь пуста!" << std::endl;
+            return "Очередь пуста!";
+        }
+        return head->data;
+    }
+
     // Метод поиска элемента
-    bool contains(const std::string& value) const {
+    bool find(const std::string& value) const {
         Node* current = head;
         while (current) {
             if (current->data == value) {
@@ -69,7 +87,7 @@ public:
         int index = 0;
         while (current) {
             if (current->data == value) {
-                return index + 1; // Нумерация с 1
+                return index + 1; // Вес с 1
             }
             current = current->next;
             index++;
@@ -77,41 +95,41 @@ public:
         return -1; // Элемент не найден
     }
 
-    // Перегрузка оператора +
+    // Перегрузка +
     Queue operator+(const Queue& other) const {
         Queue result;
         Node* current = head;
         while (current) {
-            result.enqueue(current->data);
+            result.add(current->data);
             current = current->next;
         }
         current = other.head;
         while (current) {
-            result.enqueue(current->data);
+            result.add(current->data);
             current = current->next;
         }
         return result;
     }
 
-    // Перегрузка оператора *
+    // Перегрузка *
     Queue operator*(const Queue& other) const {
         Queue result;
         Node* current1 = head;
         Node* current2 = other.head;
         while (current1 || current2) {
             if (current1) {
-                result.enqueue(current1->data);
+                result.add(current1->data);
                 current1 = current1->next;
             }
             if (current2) {
-                result.enqueue(current2->data);
+                result.add(current2->data);
                 current2 = current2->next;
             }
         }
         return result;
     }
 
-    // Унарная перегрузка оператора - (разворот очереди)
+    // Разворот очереди
     Queue operator-() const {
         Queue result;
         Node* current = head;
@@ -119,15 +137,12 @@ public:
             Node* newNode = new Node(current->data);
             newNode->next = result.head;
             result.head = newNode;
-            if (!result.tail) {
-                result.tail = newNode;
-            }
             current = current->next;
         }
         return result;
     }
 
-    // Метод удаления элемента
+    // Удалить ждуна
     void DolgoZdat(const std::string& value) {
         Node* current = head;
         Node* previous = nullptr;
@@ -136,21 +151,19 @@ public:
             if (current->data == value) {
                 if (previous) {
                     previous->next = current->next;
-                } else {
+                }
+                else {
                     head = current->next;
                 }
-                if (current == tail) {
-                    tail = previous;
-                }
                 delete current;
-                return; // Элемент найден и удален; выходим
+                return; 
             }
             previous = current;
             current = current->next;
         }
     }
 
-    // Метод для вывода очереди (для проверки)
+
     void print() const {
         Node* current = head;
         while (current) {
@@ -159,47 +172,51 @@ public:
         }
         std::cout << std::endl;
     }
+ 
 };
 
 int main() {
+    setlocale(LC_ALL, "Russian");
     Queue q1;
-    q1.enqueue("a1");
-    q1.enqueue("a2");
-    q1.enqueue("a3");
-    std::cout << "Queue 1: ";
+    q1.add("a1");
+    q1.add("a2");
+    q1.add("a3");
+    std::cout << "Очередь 1: ";
     q1.print();
 
     Queue q2;
-    q2.enqueue("b1");
-    q2.enqueue("b2");
-    std::cout << "Queue 2: ";
+    q2.add("b1");
+    q2.add("b2");
+    std::cout << "Очередь 2: ";
     q2.print();
 
-    // Перегрузка +
     Queue q3 = q1 + q2;
-    std::cout << "Combined Queue: ";
+    std::cout << "Сложение очередей: ";
     q3.print();
 
-    // Перегрузка *
     Queue q4 = q1 * q2;
-    std::cout << "Crossed Queue: ";
+    std::cout << "Умножение очередей: ";
     q4.print();
 
-    // Перегрузка -
     Queue q5 = -q1;
-    std::cout << "Reversed Queue 1: ";
+    std::cout << "Разворот очередей: ";
     q5.print();
 
-    // Поиск элемента
-    std::cout << "Contains 'a2': " << q1.contains("a2") << std::endl;
+    std::cout << "Поиск a2: " << q1.find("a2") << std::endl;
 
-    // Вычисление веса элемента
-    std::cout << "Weight of 'a2': " << q1.weight("a2") << std::endl;
+    std::cout << "Вес a2: " << q1.weight("a2") << std::endl;
 
-    // Удаление элемента
     q1.DolgoZdat("a2");
-    std::cout << "Queue after deleting 'a2': ";
+    std::cout << "Очередь после удаления a2: ";
     q1.print();
+
+    std::cout << "Извлечения элемента из начала очереди 1: " << q1.deq() << std::endl;
+
+
+    Queue q10;
+    /*q1.add("a1");
+    q1.DolgoZdat("a1");*/
+    q10.smotrFirstEl();
 
     return 0;
 }
