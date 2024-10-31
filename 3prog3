@@ -1,0 +1,57 @@
+
+        }
+    }
+
+    // Метод для вывода очереди (для проверки)
+    void print() const {
+        Node* current = head;
+        while (current) {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    Queue q1;
+    q1.enqueue("a1");
+    q1.enqueue("a2");
+    q1.enqueue("a3");
+    std::cout << "Queue 1: ";
+    q1.print();
+
+    Queue q2;
+    q2.enqueue("b1");
+    q2.enqueue("b2");
+    std::cout << "Queue 2: ";
+    q2.print();
+
+    // Перегрузка +
+    Queue q3 = q1 + q2;
+    std::cout << "Combined Queue: ";
+    q3.print();
+
+    // Перегрузка *
+    Queue q4 = q1 * q2;
+    std::cout << "Crossed Queue: ";
+    q4.print();
+
+    // Перегрузка -
+    Queue q5 = -q1;
+    std::cout << "Reversed Queue 1: ";
+    q5.print();
+
+    // Поиск элемента
+    std::cout << "Contains 'a2': " << q1.contains("a2") << std::endl;
+
+    // Вычисление веса элемента
+    std::cout << "Weight of 'a2': " << q1.weight("a2") << std::endl;
+
+    // Удаление элемента
+    q1.DolgoZdat("a2");
+    std::cout << "Queue after deleting 'a2': ";
+    q1.print();
+
+    return 0;
+}
