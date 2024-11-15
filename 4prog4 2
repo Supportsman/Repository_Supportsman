@@ -1,0 +1,188 @@
+#include <iostream>
+#include <string>
+#include <stdexcept>
+
+class Stack {
+private:
+    struct Node {
+        std::string data;
+        Node* next;
+        Node* prev;
+
+        Node(const std::string& data, Node* next = nullptr, Node* prev = nullptr)
+            : data(data), next(next), prev(prev) {}
+    };
+
+    Node* top; // указатель на вершину стека
+    size_t size; // количество элементов в стеке
+
+public:
+    // Конструктор
+    Stack() : top(nullptr), size(0) {}
+
+    // Деструктор
+    ~Stack() {
+        while (top) {
+            Node* temp = top;
+            top = top->next;
+            delete temp;
+        }
+    }
+
+    // Метод 1: Добавление элемента в начало (вверх стека)
+    void push(const std::string& value) {
+        Node* newNode = new Node(value, top);
+        if (top) {
+            top->prev = newNode;
+        }
+        top = newNode;
+        size++;
+    }
+
+    // Метод 2: Просмотр и извлечение элемента из начала
+    std::string pop() {
+        if (isEmpty()) {
+            throw std::out_of_range("Stack is empty");
+        }
+        Node* temp = top;
+        std::string value = top->data;
+        top = top->next;
+        if (top) {
+            top->prev = nullptr;
+        }
+        delete temp;
+        size--;
+        return value;
+    }
+
+    // Метод 3: Поиск элемента (вернуть true/false)
+    bool find(const std::string& value) const {
+        Node* current = top;
+        while (current) {
+            if (current->data == value) {
+                return true;
+            }
+            current = current->next;
+        }
+        return false;
+    }
+
+    // Метод 4: Вычисление веса элемента (номер в стеке или -1)
+    int weight(const std::string& value) const {
+        Node* current = top;
+        int position = 1;
+        while (current) {
+            if (current->data == value) {
+                return position;
+            }
+            current = current->next;
+            position++;
+        }
+        return -1;
+    }
+
+    // Метод 5: Глубина стека
+    size_t depth() const {
+        return size;
+    }
+
+    // Перегрузка оператора + (добавление стека B поверх стека A)
+    Stack operator+(const Stack& other) const {
+        Stack result = *this; // Копия текущего стека
+        Node* current = other.top;
+        while (current) {
+            result.push(current->data);
+            current = current->next;
+        }
+        return result;
+    }
+
+    // Перегрузка оператора * (перекрестное соединение стеков)
+    Stack operator*(const Stack& other) const {
+        Stack result;
+        Node* currentA = this->top;
+        Node* currentB = other.top;
+
+        // Добавляем элементы поочередно из обоих стеков
+        while (currentA || currentB) {
+            if (currentA) {
+                result.push(currentA->data);
+                currentA = currentA->next;
+            }
+            if (currentB) {
+                result.push(currentB->data);
+                currentB = currentB->next;
+            }
+        }
+        return result;
+    }
+
+    // Унарный оператор - (переворот стека)
+    Stack operator-() const {
+        Stack result;
+        Node* current = top;
+        while (current) {
+            result.push(current->data);
+            current = current->next;
+        }
+        return result;
+    }
+
+    // Метод Dzenga(i) — удаление элемента с весом i
+    void dzenga(size_t index) {
+        if (index < 1 || index > size) {
+            throw std::out_of_range("Invalid index");
+        }
+
+        Node* current = top;
+        for (size_t i = 1; i < index; ++i) {
+            current = current->next;
+        }
+
+        if (current->prev) {
+            current->prev->next = current->next;
+        }
+        else {
+            top = current->next;
+        }
+
+        if (current->next) {
+            current->next->prev = current->prev;
+        }
+
+        delete current;
+        size--;
+    }
+
+    // Проверка, пуст ли стек
+    bool isEmpty() const {
+        return size == 0;
+    }
+
+    // Вывод стека (для отладки)
+    void print() const {
+        Node* current = top;
+        while (current) {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    Stack stack1;
+    stack1.push("a");
+    stack1.push("b");
+    stack1.push("c");
+    std::cout << "Stack 1: ";
+    stack1.print();
+
+    Stack stack2;
+    stack2.push("1");
+    stack2.push("2");
+    stack2.push("3");
+    std::cout << "Stack 2: ";
+    stack2.print();
+}
+    // Пример исп
