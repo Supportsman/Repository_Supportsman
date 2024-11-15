@@ -1,0 +1,137 @@
+#include <iostream>
+#include <string>
+
+struct Node {
+    std::string Data;
+    Node* next;
+    Node* prev;
+    Node(const std::string& data) : Data(data), next(nullptr), prev(nullptr) {}
+};
+
+class Stack {
+private:
+    Node* head;
+    int size;
+
+public:
+    Stack() : head(nullptr), size(0) {}
+
+    ~Stack() {
+        while (head) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+
+    void push(const std::string& data) {
+        Node* newNode = new Node(data);
+        if (head) {
+            head->prev = newNode;
+            newNode->next = head;
+        }
+        head = newNode;
+        size++;
+    }
+
+    std::string pop() {
+        if (!head) throw std::out_of_range("Stack is empty");
+        Node* temp = head;
+        std::string data = head->Data;
+        head = head->next;
+        if (head) head->prev = nullptr;
+        delete temp;
+        size--;
+        return data;
+    }
+
+    bool search(const std::string& data) {
+        Node* current = head;
+        while (current) {
+            if (current->Data == data) return true;
+            current = current->next;
+        }
+        return false;
+    }
+
+    int weight(const std::string& data) {
+        Node* current = head;
+        int position = 0;
+        while (current) {
+            if (current->Data == data) return position;
+            current = current->next;
+            position++;
+        }
+        return -1;
+    }
+
+    int depth() const {
+        return size;
+    }
+
+    Stack operator+(const Stack& other) const {
+        Stack result = *this;
+        Node* current = other.head;
+        while (current) {
+            result.push(current->Data);
+            current = current->next;
+        }
+        return result;
+    }
+
+    Stack operator*(const Stack& other) const {
+        Stack result;
+        Node* current1 = head;
+        Node* current2 = other.head;
+        while (current1 && current2) {
+            result.push(current1->Data);
+            result.push(current2->Data);
+            current1 = current1->next;
+            current2 = current2->next;
+        }
+        while (current1) {
+            result.push(current1->Data);
+            current1 = current1->next;
+        }
+        while (current2) {
+            result.push(current2->Data);
+            current2 = current2->next;
+        }
+        return result;
+    }
+
+    Stack operator-() const {
+        Stack result;
+        Node* current = head;
+        while (current) {
+            result.push(current->Data);
+            current = current->next;
+        }
+        return result;
+    }
+
+    void Dzenga(int i) {
+        if (i < 0 || i >= size) throw std::out_of_range("Invalid index");
+        Node* current = head;
+        for (int j = 0; j < i; j++) {
+            current = current->next;
+        }
+        if (current->prev) current->prev->next = current->next;
+        if (current->next) current->next->prev = current->prev;
+        if (current == head) head = current->next;
+        delete current;
+        size--;
+    }
+};
+
+int main() {
+    Stack stack;
+    stack.push("first");
+    stack.push("second");
+    stack.push("third");
+
+    std::cout << "Top element: " << stack.pop() << std::endl;
+    std::cout << "Stack depth: " << stack.depth() << std::endl;
+
+    return 0;
+}
