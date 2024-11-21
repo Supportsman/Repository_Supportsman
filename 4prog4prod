@@ -1,0 +1,29 @@
+Stack Stack::operator*(const Stack& other) const
+{
+    Stack result;
+    Node* currentA = this->top; // Указатель на верхний элемент первого стека
+    Node* currentB = other.top;  // Указатель на верхний элемент второго стека
+
+    // Используем временный стек для хранения элементов в нужном порядке
+    Stack temp;
+
+    // Чередуем элементы из обоих стеков
+    while (currentA || currentB) {
+        if (currentA) {
+            temp.Push(currentA->data); // Добавляем элемент из первого стека
+            currentA = currentA->nextElementPointer; // Переходим к следующему элементу
+        }
+        if (currentB) {
+            temp.Push(currentB->data); // Добавляем элемент из второго стека
+            currentB = currentB->nextElementPointer; // Переходим к следующему элементу
+        }
+    }
+
+    // Переносим элементы из временного стека в результирующий
+    while (!temp.IsEmpty()) {
+        result.Push(temp.Pop()); // Переносим элементы обратно в результат
+    }
+
+    // Теперь результат должен быть в правильном порядке
+    return result;
+}
