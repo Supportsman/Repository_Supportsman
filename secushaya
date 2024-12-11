@@ -1,0 +1,23 @@
+#include <iostream>
+#include <cmath>
+
+double f(double x) {
+    return x * x - 2; // Пример функции: x^2 - 2 = 0
+}
+
+double secant(double x0, double x1, double epsilon) {
+    double x2;
+    while (fabs(x1 - x0) >= epsilon) {
+        x2 = x1 - f(x1) * (x1 - x0) / (f(x1) - f(x0));
+        x0 = x1;
+        x1 = x2;
+    }
+    return x2;
+}
+
+int main() {
+    double x0 = 0, x1 = 2, epsilon = 0.01;
+    double root = secant(x0, x1, epsilon);
+    std::cout << "Корень: " << root << std::endl;
+    return 0;
+}
