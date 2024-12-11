@@ -1,0 +1,28 @@
+#include <iostream>
+#include <cmath>
+
+double f(double x) {
+    return x * x - 2; // Пример функции: x^2 - 2 = 0
+}
+
+double bisection(double a, double b, double epsilon) {
+    double c;
+    while ((b - a) >= epsilon) {
+        c = (a + b) / 2;
+        if (f(c) == 0.0) {
+            break;
+        } else if (f(c) * f(a) < 0) {
+            b = c;
+        } else {
+            a = c;
+        }
+    }
+    return c;
+}
+
+int main() {
+    double a = 0, b = 2, epsilon = 0.01;
+    double root = bisection(a, b, epsilon);
+    std::cout << "Корень: " << root << std::endl;
+    return 0;
+}
