@@ -1,0 +1,89 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+#include <cctype>
+
+class HashTableWithOpenAddressing {
+public:
+    std::vector<std::string> Table;
+    int Count;
+
+    HashTableWithOpenAddressing(int size) : Table(size), Count(0) {}
+
+    void Insert(const std::string& word) {
+        int index = HashFunction(word);
+
+        while (!Table[index].empty() && Table[index] != word) {
+            index = (index + 1) % Table.size(); // Линейная проба
+        }
+
+        if (Table[index].empty() || Table[index] == word) {
+            Table[index] = word;
+            Count++;
+        }
+    }
+
+private:
+    int HashFunction(const std::string& word) {
+        int hash = 0;
+        for (char c : word) {
+            hash = (hash * 31 + c) % Table.size(); // Простая хеш-функция
+        }
+        return hash;
+    }
+};
+
+std::string ReadFile(const std::string& filePath) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Ошибка при чтении файла." << std::endl;
+        return "";
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+HashTableWithOpenAddressing CreateHashTable(const std::string& text) {
+    std::istringstream iss(text);
+    std::vector<std::string> words;
+    std::string word;
+
+    while (iss >> word) {
+        words.push_back(word);
+    }
+
+    // Создаем хеш-таблицу с размером, равным удвоенному числу уникальных слов
+    HashTableWithOpenAddressing hashTable(words.size() * 2);
+
+    for (auto& word : words) {
+        std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+        hashTable.Insert(word);
+    }
+
+    return hashTable;
+}
+
+void PrintHashTable(const HashTableWithOpenAddressing& hashTable) {
+    for (size_t i = 0; i < hashTable.Table.size(); ++i) {
+        if (!hashTable.Table[i].empty()) {
+            std::cout << "Index: " << i << ", Word: " << hashTable.Table[i] << std::endl;
+        }
+    }
+}
+
+int main() {
+    std::string filePath = "C:\\Users\\Daniil\\Desktop\\docum\\text.txt"; // Путь к вашему текстовому файлу
+
+    // Чтение текста из файла
+    std::string text = ReadFile(filePath);
+    if (text.empty()) {
+        return 1;
+    }
+
+    // Создание хеш-таблицы
+    HashTableWithOpenAddressing
