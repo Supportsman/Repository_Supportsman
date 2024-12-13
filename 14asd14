@@ -1,0 +1,76 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+#include <list>
+#include <algorithm>
+
+class SimpleHashTable {
+public:
+    std::unordered_map<int, std::list<std::string>> hashTable;
+
+    void Insert(const std::string& word) {
+        int hash = HashFunction(word);
+        hashTable[hash].push_back(word);
+    }
+
+    void Print() const {
+        for (const auto& entry : hashTable) {
+            std::cout << "Hash: " << entry.first << std::endl;
+            for (const auto& word : entry.second) {
+                std::cout << "  Word: " << word << std::endl;
+            }
+        }
+    }
+
+private:
+    int HashFunction(const std::string& word) const {
+        int hash = 0;
+        for (char ch : word) {
+            hash += ch;
+        }
+        return hash % 100;
+    }
+};
+
+std::vector<std::string> ReadFile(const std::string& filePath) {
+    std::vector<std::string> words;
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Ошибка при чтении файла." << std::endl;
+        return words;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string word;
+        while (iss >> word) {
+            words.push_back(word);
+        }
+    }
+
+    return words;
+}
+
+int main() {
+    std::string filePath = "C:\\Users\\Daniil\\Desktop\\docum\\text.txt"; // Путь к текстовому файлу
+
+    // Чтение файла и извлечение слов
+    std::vector<std::string> words = ReadFile(filePath);
+
+    // Создание хеш-таблицы
+    SimpleHashTable hashTable;
+
+    // Заполнение хеш-таблицы
+    for (const auto& word : words) {
+        hashTable.Insert(word);
+    }
+
+    // Вывод хеш-таблицы
+    hashTable.Print();
+
+    return 0;
+}
