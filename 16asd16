@@ -1,0 +1,188 @@
+using System;
+using System.Text;
+
+public class TreeNode
+{
+    public string Value { get; set; }
+    public TreeNode Left { get; set; }
+    public TreeNode Right { get; set; }
+
+    public TreeNode(string value)
+    {
+        Value = value;
+        Left = null;
+        Right = null;
+    }
+}
+
+public class BinaryTree
+{
+    public TreeNode Root { get; private set; }
+
+    public BinaryTree(string input)
+    {
+        Root = Parse(input);
+    }
+
+    private TreeNode Parse(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return null;
+
+        int index = input.IndexOf('(');
+        if (index == -1)
+        {
+            if (int.TryParse(input.Trim(), out int value))
+            {
+                return new TreeNode(value.ToString());
+            }
+            else
+            {
+                throw new FormatException("Invalid input format.");
+            }
+        }
+
+        string valueStr = input.Substring(0, index).Trim();
+        if (!int.TryParse(valueStr, out int nodeValue))
+        {
+            throw new FormatException("Invalid input format.");
+        }
+
+        TreeNode node = new TreeNode(nodeValue.ToString());
+
+        int leftStart = index + 1;
+        int commaIndex = FindCommaIndex(input, leftStart);
+        int leftEnd = commaIndex - 1;
+
+        if (leftStart <= leftEnd)
+        {
+            string leftSubtree = input.Substring(leftStart, leftEnd - leftStart + 1);
+            node.Left = Parse(leftSubtree);
+        }
+
+        int rightStart = commaIndex + 1;
+        int rightEnd = input.Length - 2;
+
+        if (rightStart <= rightEnd)
+        {
+            string rightSubtree = input.Substring(rightStart, rightEnd - rightStart + 1);
+            node.Right = Parse(rightSubtree);
+        }
+
+        return node;
+    }
+
+    private int FindCommaIndex(string input, int start)
+    {
+        int count = 0;
+        for (int i = start; i < input.Length; i++)
+        {
+            if (input[i] == '(') count++;
+            else if (input[i] == ')') count--;
+            else if (input[i] == ',' && count == 0) return i;
+        }
+        return -1;
+    }
+
+    // РџСЂСЏРјРѕР№ РѕР±С…РѕРґ (Preorder) СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЃС‚РµРєР°
+    public string Preorder()
+    {
+        if (Root == null) return string.Empty;
+
+        StringBuilder result = new StringBuilder();
+        Stack<TreeNode> stack = new Stack<TreeNode>();
+        stack.Push(Root);
+
+        while (stack.Count > 0)
+        {
+            TreeNode current = stack.Pop();
+            result.Append(current.Value + " ");
+
+            if (current.Right != null)
+            {
+                stack.Push(current.Right);
+            }
+            if (current.Left != null)
+            {
+                stack.Push(current.Left);
+            }
+        }
+
+        return result.ToString().TrimEnd();
+    }
+
+    // Р¦РµРЅС‚СЂР°Р»СЊРЅС‹Р№ РѕР±С…РѕРґ (Inorder) СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЃС‚РµРєР°
+    public string Inorder()
+    {
+        if (Root == null) return string.Empty;
+
+        StringBuilder result = new StringBuilder();
+        Stack<TreeNode> stack = new Stack<TreeNode>();
+        TreeNode current = Root;
+
+        while (current != null || stack.Count > 0)
+        {
+            while (current != null)
+            {
+                stack.Push(current);
+                current = current.Left;
+            }
+
+            current = stack.Pop();
+            result.Append(current.Value + " ");
+            current = current.Right;
+        }
+
+        return result.ToString().TrimEnd();
+    }
+
+    // РљРѕРЅС†РµРІРѕР№ РѕР±С…РѕРґ (Postorder) СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЃС‚РµРєР°
+    public string Postorder()
+    {
+        if (Root == null) return string.Empty;
+
+        StringBuilder result = new StringBuilder();
+        Stack<TreeNode> stack1 = new Stack<TreeNode>();
+        Stack<TreeNode> stack2 = new Stack<TreeNode>();
+        stack1.Push(Root);
+
+        while (stack1.Count > 0)
+        {
+            TreeNode current = stack1.Pop();
+            stack2.Push(current);
+
+            if (current.Left != null)
+            {
+                stack1.Push(current.Left);
+            }
+            if (current.Right != null)
+            {
+                stack1.Push(current.Right);
+            }
+        }
+
+        while (stack2.Count > 0)
+        {
+            result.Append(stack2.Pop().Value + " ");
+        }
+
+        return result.ToString().TrimEnd();
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        string input = "8(3(1,6(4,7)),10(,14(13,)))";
+        BinaryTree tree = new BinaryTree(input);
+
+        Console.WriteLine("Preorder traversal:");
+        Console.WriteLine(tree.Preorder());
+
+        Console.WriteLine("Inorder traversal:");
+        Console.WriteLine(tree.Inorder());
+
+        Console.WriteLine("Postorder traversal:");
+        Console.WriteLine(tree.Postorder());
+    }
+}
