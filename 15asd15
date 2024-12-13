@@ -1,0 +1,102 @@
+#include <iostream>
+#include <string>
+#include <memory>
+
+class TreeNode {
+public:
+    std::string Value;
+    std::shared_ptr<TreeNode> Left;
+    std::shared_ptr<TreeNode> Right;
+
+    TreeNode(const std::string& value) : Value(value), Left(nullptr), Right(nullptr) {}
+};
+
+class BinaryTree {
+public:
+    std::shared_ptr<TreeNode> Root;
+
+    BinaryTree(const std::string& input) {
+        Root = Parse(input);
+    }
+
+private:
+    std::shared_ptr<TreeNode> Parse(const std::string& input) {
+        if (input.empty()) return nullptr;
+
+        size_t index = input.find('(');
+        if (index == std::string::npos) return std::make_shared<TreeNode>(input);
+
+        std::string value = input.substr(0, index);
+        auto node = std::make_shared<TreeNode>(value);
+
+        size_t leftStart = index + 1;
+        size_t commaIndex = FindCommaIndex(input, leftStart);
+        size_t leftEnd = commaIndex - 1;
+
+        if (leftStart <= leftEnd) {
+            std::string leftSubtree = input.substr(leftStart, leftEnd - leftStart + 1);
+            node->Left = Parse(leftSubtree);
+        }
+
+        size_t rightStart = commaIndex + 1;
+        size_t rightEnd = input.length() - 2;
+
+        if (rightStart <= rightEnd) {
+            std::string rightSubtree = input.substr(rightStart, rightEnd - rightStart + 1);
+            node->Right = Parse(rightSubtree);
+        }
+
+        return node;
+    }
+
+    size_t FindCommaIndex(const std::string& input, size_t start) {
+        int count = 0;
+        for (size_t i = start; i < input.length(); ++i) {
+            if (input[i] == '(') count++;
+            else if (input[i] == ')') count--;
+            else if (input[i] == ',' && count == 0) return i;
+        }
+        return std::string::npos;
+    }
+
+public:
+    void Preorder(const std::shared_ptr<TreeNode>& node) const {
+        if (!node) return;
+        std::cout << node->Value << " ";
+        Preorder(node->Left);
+        Preorder(node->Right);
+    }
+
+    void Inorder(const std::shared_ptr<TreeNode>& node) const {
+        if (!node) return;
+        Inorder(node->Left);
+        std::cout << node->Value << " ";
+        Inorder(node->Right);
+    }
+
+    void Postorder(const std::shared_ptr<TreeNode>& node) const {
+        if (!node) return;
+        Postorder(node->Left);
+        Postorder(node->Right);
+        std::cout << node->Value << " ";
+    }
+};
+
+int main() {
+    std::string input = "8(3(1,6(4,7)),10(,14(13,)))";
+    BinaryTree tree(input);
+
+    std::cout << "Preorder traversal:" << std::endl;
+    tree.Preorder(tree.Root);
+    std::cout << std::endl;
+
+    std::cout << "Inorder traversal:" << std::endl;
+    tree.Inorder(tree.Root);
+    std::cout << std::endl;
+
+    std::cout << "Postorder traversal:" << std::endl;
+    tree.Postorder(tree.Root);
+    std::cout << std::endl;
+
+    return 0;
+}
