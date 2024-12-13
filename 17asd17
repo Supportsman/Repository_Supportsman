@@ -1,0 +1,118 @@
+#include <iostream>
+#include <functional>
+
+class TreeNode {
+public:
+    int Value;
+    TreeNode* Left;
+    TreeNode* Right;
+
+    TreeNode(int value) : Value(value), Left(nullptr), Right(nullptr) {}
+};
+
+class BinarySearchTree {
+public:
+    TreeNode* Root;
+
+    BinarySearchTree() : Root(nullptr) {}
+
+    void Insert(int value) {
+        Root = Insert(Root, value);
+        std::cout << "Inserted " << value << std::endl;
+    }
+
+    void InOrderTraversal(TreeNode* node, const std::function<void(int)>& action) {
+        if (node != nullptr) {
+            InOrderTraversal(node->Left, action);
+            action(node->Value);
+            InOrderTraversal(node->Right, action);
+        }
+    }
+
+    void Delete(int value) {
+        Root = Delete(Root, value);
+        std::cout << "Deleted " << value << std::endl;
+    }
+
+    void PrintInOrder() {
+        std::cout << "In-order traversal:" << std::endl;
+        InOrderTraversal(Root, [](int value) { std::cout << value << " "; });
+        std::cout << std::endl;
+    }
+
+    void PrintTree(TreeNode* node, const std::string& indent = "", bool isLeft = true) {
+        if (node != nullptr) {
+            std::cout << indent;
+            std::cout << (isLeft ? "L---- " : "R---- ");
+            std::cout << node->Value << std::endl;
+            PrintTree(node->Left, indent + (isLeft ? "|   " : "    "), true);
+            PrintTree(node->Right, indent + (isLeft ? "|   " : "    "), false);
+        }
+    }
+
+private:
+    TreeNode* Insert(TreeNode* node, int value) {
+        if (node == nullptr) {
+            return new TreeNode(value);
+        }
+        if (value < node->Value) {
+            node->Left = Insert(node->Left, value);
+        } else {
+            node->Right = Insert(node->Right, value);
+        }
+        return node;
+    }
+
+    TreeNode* Delete(TreeNode* root, int value) {
+        if (root == nullptr) return root;
+
+        if (value < root->Value) {
+            root->Left = Delete(root->Left, value);
+        } else if (value > root->Value) {
+            root->Right = Delete(root->Right, value);
+        } else {
+            if (root->Left == nullptr)
+                return root->Right;
+            else if (root->Right == nullptr)
+                return root->Left;
+            root->Value = MinValue(root->Right);
+            root->Right = Delete(root->Right, root->Value);
+        }
+        return root;
+    }
+
+    int MinValue(TreeNode* node) {
+        int minValue = node->Value;
+        while (node->Left != nullptr) {
+            minValue = node->Left->Value;
+            node = node->Left;
+        }
+        return minValue;
+    }
+};
+
+int main() {
+    BinarySearchTree bst;
+
+    bst.Insert(7);
+    bst.Insert(3);
+    bst.Insert(9);
+    bst.Insert(1);
+    bst.Insert(5);
+    bst.Insert(8);
+    bst.Insert(10);
+
+    bst.PrintInOrder();
+
+    std::cout << "Current tree structure:" << std::endl;
+    bst.PrintTree(bst.Root);
+
+    bst.Delete(3);
+
+    bst.PrintInOrder();
+
+    std::cout << "Current tree structure after deletion:" << std::endl;
+    bst.PrintTree(bst.Root);
+
+    return 0;
+}
