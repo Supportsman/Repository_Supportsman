@@ -1,101 +1,90 @@
 #include <iostream>
 #include <string>
-#include <memory>
+#include <sstream>
 
-class TreeNode {
-public:
-    std::string Value;
-    std::shared_ptr<TreeNode> Left;
-    std::shared_ptr<TreeNode> Right;
-
-    TreeNode(const std::string& value) : Value(value), Left(nullptr), Right(nullptr) {}
+struct TreeNode {
+    int value;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x) : value(x), left(nullptr), right(nullptr) {}
 };
 
-class BinaryTree {
-public:
-    std::shared_ptr<TreeNode> Root;
-
-    BinaryTree(const std::string& input) {
-        Root = Parse(input);
+// Функция для создания дерева
+TreeNode* parseTree(std::istringstream& ss) {
+    if (ss.peek() == ' ') {
+        ss.get(); // Пропустить пробел
     }
 
-private:
-    std::shared_ptr<TreeNode> Parse(const std::string& input) {
-        if (input.empty()) return nullptr;
+    // Если втречается конец строки или , это значит, что узел отсутстсвует 
+    if (ss.peek() == ')' or  ss.peek() == ',' or ss.peek() == EOF) {
+        return nullptr;
+    }
 
-        size_t index = input.find('(');
-        if (index == std::string::npos) return std::make_shared<TreeNode>(input);
+    int value;
+    ss >> value; // считываем значение
+    TreeNode* node = new TreeNode(value);
 
-        std::string value = input.substr(0, index);
-        auto node = std::make_shared<TreeNode>(value);
+    if (ss.peek() == ' ') {
+        ss.get(); // Пропускать пробелы
+    }
 
-        size_t leftStart = index + 1;
-        size_t commaIndex = FindCommaIndex(input, leftStart);
-        size_t leftEnd = commaIndex - 1;
+    if (ss.peek() == '(') {
+        ss.get(); // Пропустить '('
+        node->left = parseTree(ss);
 
-        if (leftStart <= leftEnd) {
-            std::string leftSubtree = input.substr(leftStart, leftEnd - leftStart + 1);
-            node->Left = Parse(leftSubtree);
+        if (ss.peek() == ',') {
+            ss.get(); // Пропустить ','
+            node->right = parseTree(ss);
         }
-
-        size_t rightStart = commaIndex + 1;
-        size_t rightEnd = input.length() - 2;
-
-        if (rightStart <= rightEnd) {
-            std::string rightSubtree = input.substr(rightStart, rightEnd - rightStart + 1);
-            node->Right = Parse(rightSubtree);
-        }
-
-        return node;
+        ss.get(); // Пропустить ')'
     }
 
-    size_t FindCommaIndex(const std::string& input, size_t start) {
-        int count = 0;
-        for (size_t i = start; i < input.length(); ++i) {
-            if (input[i] == '(') count++;
-            else if (input[i] == ')') count--;
-            else if (input[i] == ',' && count == 0) return i;
-        }
-        return std::string::npos;
-    }
+    return node;
+}
 
-public:
-    void Preorder(const std::shared_ptr<TreeNode>& node) const {
-        if (!node) return;
-        std::cout << node->Value << " ";
-        Preorder(node->Left);
-        Preorder(node->Right);
-    }
+// Прямой обход
+// Корень, левый узел, правый узел
+void preorderTraversal(TreeNode* node) {
+    if (!node) return;
+    std::cout << node->value << " ";
+    preorderTraversal(node->left);
+    preorderTraversal(node->right);
+}
 
-    void Inorder(const std::shared_ptr<TreeNode>& node) const {
-        if (!node) return;
-        Inorder(node->Left);
-        std::cout << node->Value << " ";
-        Inorder(node->Right);
-    }
+// Центральный обход
+// Левый узел, корень, правый узел
+void inorderTraversal(TreeNode* node) {
+    if (!node) return;
+    inorderTraversal(node->left);
+    std::cout << node->value << " ";
+    inorderTraversal(node->right);
+}
 
-    void Postorder(const std::shared_ptr<TreeNode>& node) const {
-        if (!node) return;
-        Postorder(node->Left);
-        Postorder(node->Right);
-        std::cout << node->Value << " ";
-    }
-};
+// Концевой обход
+// Левый узел, правый узел, корень
+void postorderTraversal(TreeNode* node) {
+    if (!node) return;
+    postorderTraversal(node->left);
+    postorderTraversal(node->right);
+    std::cout << node->value << " ";
+}
 
 int main() {
-    std::string input = "8(3(1,6(4,7)),10(,14(13,)))";
-    BinaryTree tree(input);
+    setlocale(0, "RU");
+    std::string treeStr = "8 (3 (1, 6 (4, 7)), 10 (, 14 (13,)))";
+    std::istringstream ss(treeStr);
+    TreeNode* root = parseTree(ss);
 
-    std::cout << "Preorder traversal:" << std::endl;
-    tree.Preorder(tree.Root);
+    std::cout << "Прямой обход: ";
+    preorderTraversal(root);
     std::cout << std::endl;
 
-    std::cout << "Inorder traversal:" << std::endl;
-    tree.Inorder(tree.Root);
+    std::cout << "Центральный обход: ";
+    inorderTraversal(root);
     std::cout << std::endl;
 
-    std::cout << "Postorder traversal:" << std::endl;
-    tree.Postorder(tree.Root);
+    std::cout << "Концевой обход: ";
+    postorderTraversal(root);
     std::cout << std::endl;
 
     return 0;
