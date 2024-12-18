@@ -1,76 +1,101 @@
 #include <iostream>
 #include <vector>
+#include <list>
 #include <string>
 #include <fstream>
-#include <sstream>
-#include <unordered_map>
-#include <list>
-#include <algorithm>
+#include <functional>
 
-class SimpleHashTable {
-public:
-    std::unordered_map<int, std::list<std::string>> hashTable;
+using namespace std;
 
-    void Insert(const std::string& word) {
-        int hash = HashFunction(word);
-        hashTable[hash].push_back(word);
+const int TABLE_SIZE = 10; // Размер хеш-таблицы
+
+// Структура для хранения ключа и значения
+struct HashNode {
+    string key; // слово
+    int value;  // Количество вхождений
+
+    HashNode(const string& k, int v) : key(k), value(v) {}
+};
+
+// Класс для хеш-таблицы
+class HashTable {
+private:
+    vector<list<HashNode>> table; // Хранение списка 
+
+    // Хеш-функция для строк
+    int hashFunction(const string& key) {
+        hash<string> hashFn;
+        return hashFn(key) % TABLE_SIZE;
     }
 
-    void Print() const {
-        for (const auto& entry : hashTable) {
-            std::cout << "Hash: " << entry.first << std::endl;
-            for (const auto& word : entry.second) {
-                std::cout << "  Word: " << word << std::endl;
+public:
+    HashTable() : table(TABLE_SIZE) {}
+
+    // Вставка или обновление значения в хеш-таблице
+    void insert(const string& key) {
+        int index = hashFunction(key);
+        for (auto& node : table[index]) {
+            if (node.key == key) {
+                node.value++; // Увеличиваем счетчик существующего слова
+                return;
             }
         }
+        // Если слово не найдено, добавляем его
+        table[index].emplace_back(key, 1);
     }
 
-private:
-    int HashFunction(const std::string& word) const {
-        int hash = 0;
-        for (char ch : word) {
-            hash += ch;
+    // Запись содержимого хеш-таблицы в файл
+    void writeToFile(const string& filename) const {
+        ofstream outfile(filename);
+        if (!outfile) {
+            cerr << "Не удалось открыть файл для записи!" << endl;
+            return;
         }
-        return hash % 100;
+
+        // Записываем все индексы и слова
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            if (!table[i].empty()) { // Проверяем, что список не пуст
+                outfile << "Index " << i << ":" << endl;
+                for (const auto& node : table[i]) {
+                    outfile << "  " << node.key << ": " << node.value << endl;
+                }
+                outfile << endl; // Для разделения индексов
+            }
+        }
+
+        outfile.close();
     }
 };
 
-std::vector<std::string> ReadFile(const std::string& filePath) {
-    std::vector<std::string> words;
-    std::ifstream file(filePath);
-    if (!file.is_open()) {
-        std::cerr << "Ошибка при чтении файла." << std::endl;
-        return words;
+int main() {
+    setlocale(LC_ALL, "RU");
+    HashTable hashTable;
+
+    // Открытие текстового файла
+    ifstream file("text.txt");
+    if (!file) {
+        cerr << "Не удалось открыть файл!" << endl;
+        return 1;
     }
 
-    std::string line;
-    while (std::getline(file, line)) {
-        std::istringstream iss(line);
-        std::string word;
-        while (iss >> word) {
-            words.push_back(word);
+    string word;
+    while (file >> word) { // Читаем файл по словам
+        // Приводим слово к нижнему регистру и удаляем неалфавитные символы
+        string cleanedWord;
+        for (char c : word) {
+            if (isalpha(c) || c == '-') { // Разрешаем буквы и дефисы
+                cleanedWord += tolower(c);
+            }
+        }
+        if (!cleanedWord.empty()) {
+            hashTable.insert(cleanedWord); // Вставляем очищенное слово 
         }
     }
 
-    return words;
-}
+    file.close(); // Закрываем файл
 
-int main() {
-    std::string filePath = "C:\\Users\\Daniil\\Desktop\\docum\\text.txt"; // Путь к текстовому файлу
-
-    // Чтение файла и извлечение слов
-    std::vector<std::string> words = ReadFile(filePath);
-
-    // Создание хеш-таблицы
-    SimpleHashTable hashTable;
-
-    // Заполнение хеш-таблицы
-    for (const auto& word : words) {
-        hashTable.Insert(word);
-    }
-
-    // Вывод хеш-таблицы
-    hashTable.Print();
+    // Выводим содержание хеш-таблицы в файл
+    hashTable.writeToFile("output.txt");
 
     return 0;
 }
