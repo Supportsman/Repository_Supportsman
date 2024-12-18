@@ -1,89 +1,75 @@
 #include <iostream>
-#include <vector>
-#include <string>
 #include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <cctype>
+#include <string>
+#include <vector>
+#include <codecvt>
+#include <locale>
 
-class HashTableWithOpenAddressing {
-public:
-    std::vector<std::string> Table;
-    int Count;
+using namespace std;
 
-    HashTableWithOpenAddressing(int size) : Table(size), Count(0) {}
+class HashTable {
+private:
+    int tableSize;// Размер таблицы
+    vector<wstring> hashTable;// Вектор для хранения значений
 
-    void Insert(const std::string& word) {
-        int index = HashFunction(word);
-
-        while (!Table[index].empty() && Table[index] != word) {
-            index = (index + 1) % Table.size(); // Линейная проба
+    // Функция хэширования для строки
+    int hashFunction(const wstring& key) {
+        int hash = 0;// индекс
+        for (wchar_t ch : key) { //проходим через каждый символ строки key
+            hash = (hash * 31 + ch) % tableSize;// вычисляем индекс для заданного слова
         }
-
-        if (Table[index].empty() || Table[index] == word) {
-            Table[index] = word;
-            Count++;
-        }
+        return hash; // Возврат сгенерированного индекса
     }
 
-private:
-    int HashFunction(const std::string& word) {
-        int hash = 0;
-        for (char c : word) {
-            hash = (hash * 31 + c) % Table.size(); // Простая хеш-функция
+public:
+    HashTable(int size) : tableSize(size), hashTable(size) {}
+
+    //добавление в таблицу
+    void insert(const wstring& value) {
+        int index = hashFunction(value);// вычисляем индекс для заданного
+        while (!hashTable[index].empty()) {
+            index = (index + 1) % tableSize;
         }
-        return hash;
+        hashTable[index] = value;
+    }
+
+    //Метод записи в файл
+    void writeToFile(const string& filename) {
+        wofstream file(filename);
+        file.imbue(locale(file.getloc(), new codecvt_utf8<wchar_t>));
+        if (!file.is_open()) {
+            wcerr << L"Не удалось открыть файл для записи!" << endl;
+            return;
+        }
+
+        for (size_t i = 0; i < hashTable.size(); ++i) {
+            if (!hashTable[i].empty()) {
+                file << L"Индекс " << i << L": " << hashTable[i] << endl;
+            }
+        }
+
+        file.close();
     }
 };
 
-std::string ReadFile(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file.is_open()) {
-        std::cerr << "Ошибка при чтении файла." << std::endl;
-        return "";
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
-
-HashTableWithOpenAddressing CreateHashTable(const std::string& text) {
-    std::istringstream iss(text);
-    std::vector<std::string> words;
-    std::string word;
-
-    while (iss >> word) {
-        words.push_back(word);
-    }
-
-    // Создаем хеш-таблицу с размером, равным удвоенному числу уникальных слов
-    HashTableWithOpenAddressing hashTable(words.size() * 2);
-
-    for (auto& word : words) {
-        std::transform(word.begin(), word.end(), word.begin(), ::tolower);
-        hashTable.Insert(word);
-    }
-
-    return hashTable;
-}
-
-void PrintHashTable(const HashTableWithOpenAddressing& hashTable) {
-    for (size_t i = 0; i < hashTable.Table.size(); ++i) {
-        if (!hashTable.Table[i].empty()) {
-            std::cout << "Index: " << i << ", Word: " << hashTable.Table[i] << std::endl;
-        }
-    }
-}
-
 int main() {
-    std::string filePath = "C:\\Users\\Daniil\\Desktop\\docum\\text.txt"; // Путь к вашему текстовому файлу
-
-    // Чтение текста из файла
-    std::string text = ReadFile(filePath);
-    if (text.empty()) {
+    wifstream inputFile("input.txt");
+    inputFile.imbue(locale(inputFile.getloc(), new codecvt_utf8<wchar_t>));
+    if (!inputFile.is_open()) {
+        wcerr << L"Не удалось открыть входной файл." << endl;
         return 1;
     }
 
-    // Создание хеш-таблицы
-    HashTableWithOpenAddressing
+    const unsigned int TABLE_SIZE = 41;
+    HashTable hashTable(TABLE_SIZE);
+
+    wstring word;
+    while (inputFile >> word) {
+        hashTable.insert(word);
+    }
+    inputFile.close();
+
+    hashTable.writeToFile("output.txt");
+
+    return 0;
+}
