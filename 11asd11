@@ -1,0 +1,81 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <string>
+const int CHUNK_SIZE = 1000; // Размер одного куска данных
+
+// Функция для чтения данных из файла и разделения их на куски
+void createInitialRuns(const std::string& inputFile, int runSize) {
+    std::ifstream in(inputFile);
+    std::vector<int> buffer(runSize);
+    int runCount = 0;
+
+    while (!in.eof()) {
+        int i = 0;
+        while (i < runSize&& in >> buffer[i]) {
+            ++i;
+        }
+
+        std::sort(buffer.begin(), buffer.begin() + i);
+
+        std::ofstream out("run" + std::to_string(runCount++) + ".txt");
+        for (int j = 0; j < i; ++j) {
+            out << buffer[j] << " ";
+        }
+    }
+}
+
+// Структура для хранения данных и их источника
+struct MinHeapNode {
+    int element;
+    int i;
+
+    // Оператор сравнения для MinHeapNode
+    bool operator>(const MinHeapNode& other) const {
+        return element > other.element;
+    }
+};
+
+// Функция для слияния отсортированных кусков
+void mergeFiles(const std::string& outputFile, int runCount, int runSize) {
+    std::vector<std::ifstream> inFiles(runCount);
+    for (int i = 0; i < runCount; ++i) {
+        inFiles[i].open("run" + std::to_string(i) + ".txt");
+    }
+
+    std::ofstream out(outputFile);
+    std::priority_queue<MinHeapNode, std::vector<MinHeapNode>, std::greater<MinHeapNode>> minHeap;
+
+    for (int i = 0; i < runCount; ++i) {
+        int element;
+        if (inFiles[i] >> element) {
+            minHeap.push({ element, i });
+        }
+    }
+
+    while (!minHeap.empty()) {
+        MinHeapNode root = minHeap.top();
+        minHeap.pop();
+        out << root.element << " ";
+
+        if (inFiles[root.i] >> root.element) {
+            minHeap.push(root);
+        }
+    }
+
+    for (int i = 0; i < runCount; ++i) {
+        inFiles[i].close();
+    }
+}
+
+int main() {
+    std::string inputFile = "input.txt";
+    std::string outputFile = "output.txt";
+
+    createInitialRuns(inputFile, CHUNK_SIZE);
+    mergeFiles(outputFile, 10, CHUNK_SIZE); // Предполагаем, что у нас 10 кусков
+
+    return 0;
+}
