@@ -1,0 +1,75 @@
+
+using System;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+
+namespace Lab1_WPF
+{
+    public partial class MainWindow : Window
+    {
+        private Color[] _backgroundColors = { Colors.Red, Colors.Green, Colors.Blue, Colors.Yellow, Colors.Purple };
+        private int _colorIndex = 0;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            // Изменение заголовка окна
+            this.Title = "Ваше Ф.И. и номер лабы";
+
+            // Изменение цвета фона при инициализации
+            this.Background = Brushes.LightGray;
+
+             // Настройка минимальных и максимальных размеров
+            this.MinWidth = 600;
+            this.MinHeight = 400;
+            this.MaxWidth = 1000;
+            this.MaxHeight = 800;
+        }
+
+        // Событие нажатия на кнопку мыши
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Клик ЛКМ - изменение цвета фона
+            this.Background = new SolidColorBrush(_backgroundColors[_colorIndex]);
+            _colorIndex = (_colorIndex + 1) % _backgroundColors.Length; // циклический перебор
+        }
+         private void Window_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Клик ПКМ - изменение типа окна
+            if (this.WindowState == WindowState.Normal)
+                this.WindowState = WindowState.Maximized;
+            else
+                this.WindowState = WindowState.Normal;
+        }
+
+         // Событие нажатия на клавишу
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+           if (e.Key == Key.Space)
+           {
+                 // Нажатие пробела - зеркальное изменение размера
+                double width = this.Width;
+                double height = this.Height;
+
+                double maxWidth = this.MaxWidth;
+                double minWidth = this.MinWidth;
+
+                double maxHeight = this.MaxHeight;
+                double minHeight = this.MinHeight;
+
+                double midWidth = (minWidth + maxWidth) / 2;
+                double midHeight = (minHeight + maxHeight) / 2;
+
+                this.Width = midWidth - (width - midWidth);
+                this.Height = midHeight - (height - midHeight);
+            }
+             else if (e.Key == Key.Escape)
+            {
+                // Нажатие Esc - закрытие окна
+                this.Close();
+            }
+        }
+    }
+}
