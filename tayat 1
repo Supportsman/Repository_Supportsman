@@ -1,0 +1,79 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <set>
+
+using namespace std;
+// (входная строка, которую нужно представить - текущее представление - список найденных представлений)
+void findWays(const string& s, string currentCombination, vector<string>& ways) {
+    if (s.empty()) {
+        ways.push_back(currentCombination);
+        return;
+    }
+
+    for (size_t i = 1; i <= s.length(); ++i) {
+        string substring = s.substr(0, i);
+        string remainder = s.substr(i);
+
+        if (substring.length() == 1) {
+            string newCombination = currentCombination + substring;
+            findWays(remainder, newCombination, ways);
+        }
+        else {
+            char firstChar = substring[0];
+            bool allSame = true;
+            for (char c : substring) {
+                if (c != firstChar) {
+                    allSame = false;
+                    break;
+                }
+            }
+            if (allSame) {
+                string newCombination = currentCombination + firstChar + "^" + to_string(substring.length());
+                findWays(remainder, newCombination, ways);
+            }
+        }
+    }
+}
+
+// Функция для получения способов и их количества
+vector<string> getRepresentationWays(const string& inputString) {
+    vector<string> ways;
+    findWays(inputString, " ", ways);
+    return ways;
+}
+
+// Функция для проверки валидности строки
+bool isValidString(const string& inputString) {
+    set<char> validChars = { 'a', 'b', 'c', 'd' };
+    for (char c : inputString) {
+        if (validChars.find(c) == validChars.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    string inputStr;
+    cout << "Введите строку из {a, b, c, d}: ";
+    cin >> inputStr;
+    // Проверка на правильность строки если прав, то список и количество способов выводим, если не прав, то намёк
+    if (isValidString(inputStr)) {
+        vector<string> waysList = getRepresentationWays(inputStr);
+
+        cout << "Способы представления строки '" << inputStr << "':" << endl;
+        for (const string& way : waysList) {
+            cout << way << endl;
+        }
+        cout << "Количество способов: " << waysList.size() << endl;
+
+    }
+    else {
+        cout << "Ошибка: Входная строка содержит недопустимые символы." << endl;
+    }
+
+    return 0;
+}
