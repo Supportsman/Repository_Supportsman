@@ -1,0 +1,150 @@
+<Window x:Class="Lab3_Buttons.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Лабораторная №3 - Кнопки и положение"
+        Width="400" Height="300"
+        WindowStartupLocation="CenterScreen">
+    
+
+    <Grid x:Name="MainGrid">
+        <!-- Метка (Точка) -->
+        <Label x:Name="PointLabel" Content="+" FontSize="40"
+               HorizontalAlignment="Left" VerticalAlignment="Top"
+               Margin="0,0,0,0"/>
+
+        <!-- Кнопки управления -->
+        <Button x:Name="UpButton" Content="ВВЕРХ"
+                Width="80" Height="30"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="150,50,0,0"
+                Click="MoveUp_Click"/>
+
+        <Button x:Name="DownButton" Content="ВНИЗ"
+                Width="80" Height="30"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="150,150,0,0"
+                Click="MoveDown_Click"/>
+
+        <Button x:Name="LeftButton" Content="ВЛЕВО"
+                Width="80" Height="30"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="70,100,0,0"
+                Click="MoveLeft_Click"/>
+
+        <Button x:Name="RightButton" Content="ВПРАВО"
+                Width="80" Height="30"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="230,100,0,0"
+                Click="MoveRight_Click"/>
+
+        <Button x:Name="InfoButton" Content="ИНФО"
+                Width="80" Height="30"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="150,200,0,0"
+                Click="Info_Click"/>
+    </Grid>
+</Window>
+
+
+
+using System;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace Lab3_Buttons
+{
+    public partial class MainWindow : Window
+    {
+        private double initialX; // X
+        private double initialY; // Y
+        private double step = 10; // Шаг
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            this.Loaded += MainWindow_Loaded;
+        }
+
+        // Центрирование метки при загрузке окна
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Вычисляем центр контейнера
+            double centerX = (MainGrid.ActualWidth - PointLabel.ActualWidth) / 2;
+            double centerY = (MainGrid.ActualHeight - PointLabel.ActualHeight) / 2;
+            PointLabel.Margin = new Thickness(centerX, centerY, 0, 0);
+            initialX = centerX;
+            initialY = centerY;
+            UpdateButtonStates();
+        }
+
+        private void MoveUp_Click(object sender, RoutedEventArgs e)
+        {
+            // Если точка уже находится у верхней границы, выход из метода
+            
+
+            double newTop = PointLabel.Margin.Top - step;
+            if (newTop < 0) newTop = -10;
+            PointLabel.Margin = new Thickness(PointLabel.Margin.Left, newTop, 0, 0);
+            UpdateButtonStates();
+        }
+
+        private void MoveDown_Click(object sender, RoutedEventArgs e)
+        {
+            double gridHeight = MainGrid.ActualHeight;
+            double labelHeight = PointLabel.ActualHeight;
+            double newTop = PointLabel.Margin.Top + step;
+            // Ограничение: нижняя граница контейнера
+            if (newTop > gridHeight - labelHeight)
+                newTop = gridHeight - labelHeight;
+            PointLabel.Margin = new Thickness(PointLabel.Margin.Left, newTop, 0, 0);
+            UpdateButtonStates();
+        }
+
+        private void MoveLeft_Click(object sender, RoutedEventArgs e)
+        {
+            double newLeft = PointLabel.Margin.Left - step;
+            if (newLeft < 0) newLeft = 0;
+            PointLabel.Margin = new Thickness(newLeft, PointLabel.Margin.Top, 0, 0);
+            UpdateButtonStates();
+        }
+
+        private void MoveRight_Click(object sender, RoutedEventArgs e)
+        {
+            double gridWidth = MainGrid.ActualWidth;
+            double labelWidth = PointLabel.ActualWidth;
+            double newLeft = PointLabel.Margin.Left + step;
+            if (newLeft > gridWidth - labelWidth)
+                newLeft = gridWidth - labelWidth;
+            PointLabel.Margin = new Thickness(newLeft, PointLabel.Margin.Top, 0, 0);
+            UpdateButtonStates();
+        }
+
+        private void Info_Click(object sender, RoutedEventArgs e)
+        {
+            double currentX = PointLabel.Margin.Left;
+            double currentY = PointLabel.Margin.Top;
+            double deltaX = currentX - initialX;
+            double deltaY = currentY - initialY;
+
+            string message = $"Положение: ({currentX}; {currentY})\nОтклонение: ({deltaX:+#;-#;0}; {deltaY:+#;-#;0})";
+            MessageBox.Show(message, "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void UpdateButtonStates()
+        {
+            double gridWidth = MainGrid.ActualWidth;
+            double gridHeight = MainGrid.ActualHeight;
+            double labelWidth = PointLabel.ActualWidth;
+            double labelHeight = PointLabel.ActualHeight;
+
+            UpButton.IsEnabled = PointLabel.Margin.Top > -10;
+            DownButton.IsEnabled = PointLabel.Margin.Top < gridHeight - labelHeight;
+            LeftButton.IsEnabled = PointLabel.Margin.Left > 10;
+            RightButton.IsEnabled = PointLabel.Margin.Left < gridWidth - labelWidth - 10;
+        }
+    }
+}
+
+
+
+Ещё надо будет добавить в XAML Resize ="NoResize" 
