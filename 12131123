@@ -1,0 +1,116 @@
+!pip install gsw
+import numpy as np
+import matplotlib.pyplot as plt
+import gsw
+import pandas as pd
+
+def clear_file(file_path):
+    """Очищает файл перед записью результатов."""
+    with open(file_path, 'w') as file:
+        file.write('')
+    return file_path
+
+def calculate_gradient(z, S):
+    """Вычисляет вертикальный градиент солености методом центрального разностного приближения."""
+    gradient = np.zeros_like(S)  # Инициализируем массив для градиента
+    gradient[1:-1] = (S[2:] - S[:-2]) / (z[2:] - z[:-2])  # Центральная разность для центральных элементов
+    gradient[0] = (S[1] - S[0]) / (z[1] - z[0])  # Левое приближение для первого элемента
+    gradient[-1] = (S[-1] - S[-2]) / (z[-1] - z[-2])  # Правое приближение для последнего элемента
+    return gradient
+
+def halocline(depth, salinity_gradient):
+    """Находит галоклин и выводит на какой глубине."""
+    max_gradient_index = np.argmax(np.abs(salinity_gradient))  # Индекс максимального градиента
+    halocline_depth = depth[max_gradient_index]  # Глубина галоклина
+    return f'Глубина галоклина: {halocline_depth:.2f} м\n'
+
+# Очистка файла для записи результатов
+clear_file('/content/drive/MyDrive/Colab Notebooks/Новый текстовый документ.txt')
+file_path = '/content/drive/MyDrive/Colab Notebooks/Фрагмент массива данных CTD-зондирования.xlsx'
+df = pd.read_excel(file_path)
+
+# Извлечение данных
+Station, Latitude, Longitude, Date, Pressure, Depth, Temperature, Conductivity = (
+    df.iloc[:, 1], df.iloc[:, 2], df.iloc[:, 3], df.iloc[:, 4], df.iloc[:, 5],
+    df.iloc[:, 6], df.iloc[:, 8], df.iloc[:, 9]
+)
+
+check, n, m = Date[1], 0, 1
+
+for i in range(1, len(Date)):
+    if check != Date[i]:
+        check = Date[i]
+        n = i
+        # Фильтрация данных по глубине
+        z = np.array([float(Depth[j]) for j in range(m, n) if float(Depth[j]) >= 15])
+        C = np.array([float(Conductivity[j]) for j in range(m, n) if float(Depth[j]) >= 15])
+        T = np.array([float(Temperature[j]) for j in range(m, n) if float(Depth[j]) >= 15])
+        P = np.array([float(Pressure[j]) for j in range(m, n) if float(Depth[j]) >= 15])
+        m = n
+
+        # Сортировка данных по глубине
+        sort_idx = np.argsort(z)
+        z_s = z[sort_idx]
+        T_s  = T[sort_idx]
+        P_s  = P[sort_idx]
+        C_s  = C[sort_idx]
+        k = len(C)
+
+        # Расчет солености и абсолютной солености
+        S = np.array([gsw.SP_from_C(C_s[j], T_s[j], P_s[j]) for j in range(k)])
+        SA = np.array([gsw.SA_from_SP(S[j], P_s[j], Longitude[i - 1], Latitude[i - 1]) for j in range(k)])
+
+        # Расчет градиента
+        gradient = calculate_gradient(z_s, S)  # Градиент солености
+        gradient1 = np.gradient(SA, z_s)  # Градиент абсолютной солености
+
+        # Профиль солености
+        plt.figure(figsize=(20, 16))
+        plt.plot(S, z_s, 'o-')
+        plt.ylim(bottom=14.9)
+        plt.gca().invert_yaxis()
+        plt.title(f"Соленость, Дата: { Date[i - 1]}, Станция: {Station[i - 1]}")
+        plt.xlabel('Соленость (PSU)')
+        plt.ylabel('Глубина (м)')
+        plt.grid()
+        plt.show()
+
+        # График градиента
+        plt.figure(figsize=(20, 16))
+        plt.plot(gradient, z_s, 's--')
+        plt.ylim(bottom=14.9)
+        plt.gca().invert_yaxis()
+        plt.title(f"Вертикальный градиент солености, Дата: { Date[i - 1]}, Станция: {Station[i - 1]}")
+        plt.xlabel('Градиент (PSU/м)')
+        plt.grid()
+        plt.show()
+
+        # Профиль абсолютной солености
+        plt.figure(figsize=(20, 16))
+        plt.plot(SA, z_s, 'o-')
+        plt.ylim(bottom=14.9)
+        plt.gca().invert_yaxis()
+        plt.title(f"Абсолютная соленость, Дата: { Date[i - 1]}, Станция: {Station[i - 1]}")
+        plt.xlabel('Абсолютная соленость (SA)')
+        plt.ylabel('Глубина (м)')
+        plt.grid()
+        plt.show()
+
+        # График градиента абсолютной солености
+        plt.figure(figsize=(20, 16))
+        plt.plot(gradient1, z_s, 's--')
+        plt.ylim(bottom=14.9)
+        plt.gca().invert_yaxis()
+        plt.title(f"Вертикальный градиент абсолютной солености, Дата: {Date[i - 1]}, Станция: {Station[i - 1]}")
+        plt.xlabel('Градиент (SA/м)')
+        plt.grid()
+        plt.show()
+
+        # Запись результатов в файл
+        with open('/content/drive/MyDrive/Colab Notebooks/Новый текстовый документ.txt', 'a') as file:
+            file.write(f'Дата: { Date[i - 1]}, Станция: {Station[i - 1]}\n')
+            file.write(halocline(z_s, gradient))  # Запись глубины галоклина
+            file.write(f"Соленость: {' '.join(str(x) for x in S)}\n")
+            file.write(f"Вертикальный градиент солености: {' '.join(str(x) for x in gradient)}\n")
+            file.write(f"Абсолютная соленость: {' '.join(str(x) for x in SA)}.\n")
+            file.write(f"Вертикальный градиент абсолютной солености: {' '.join(str(x) for x in gradient1)}\n")
