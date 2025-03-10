@@ -1,0 +1,187 @@
+using System;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace Lab4
+{
+    
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        // Проверка корректности введенного значения
+        private bool ValidateInput(string input)
+        {
+            // Проверка на пробелы слева или справа
+            if (input.Trim() != input)
+                return false;
+
+            // Проверка на незначащие нули
+            if (input.Length > 1 && input.StartsWith("0"))
+                return false;
+
+            // Проверка, что это число и оно положительное
+            return int.TryParse(input, out int value) && value >= 0;
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                if (ValidateInput(textBox.Text))
+                {
+                    textBox.Background = System.Windows.Media.Brushes.Green;
+                }
+                else
+                {
+                    textBox.Background = System.Windows.Media.Brushes.LightPink;
+                }
+            }
+        }
+
+        private void ButtonCount_Click(object sender, RoutedEventArgs e)
+        {
+            bool isValid = true;
+            
+            string errorMessage = "Ошибка ввода:\n";
+
+            // Проверка моих полей
+            if (!ValidateInput(TextBoxArtemApples.Text))
+            {
+                TextBoxArtemApples.Background = System.Windows.Media.Brushes.LightPink;
+                isValid = false;
+                errorMessage += "- Артём Яблоки: введите положительное число без пробелов и незначащих нулей\n";
+            }
+
+            if (!ValidateInput(TextBoxArtemPears.Text))
+            {
+                TextBoxArtemPears.Background = System.Windows.Media.Brushes.LightPink;
+                isValid = false;
+                errorMessage += "- Артём Груши: введите положительное число без пробелов и незначащих нулей\n";
+            }
+
+            // Проверка полей Димы
+            if (!ValidateInput(TextBoxDimaApples.Text))
+            {
+                TextBoxDimaApples.Background = System.Windows.Media.Brushes.LightPink;
+                isValid = false;
+                errorMessage += "- Дима Яблоки: введите положительное число без пробелов и незначащих нулей\n";
+            }
+
+            if (!ValidateInput(TextBoxDimaPears.Text))
+            {
+                TextBoxDimaPears.Background = System.Windows.Media.Brushes.LightPink;
+                isValid = false;
+                errorMessage += "- Дима Груши: введите положительное число без пробелов и незначащих нулей\n";
+            }
+
+            if (isValid)
+            {
+                int artemApples = int.Parse(TextBoxArtemApples.Text);
+                int artemPears = int.Parse(TextBoxArtemPears.Text);
+                int dimaApples = int.Parse(TextBoxDimaApples.Text);
+                int dimaPears = int.Parse(TextBoxDimaPears.Text);
+
+                int totalApples = artemApples + dimaApples;
+                int totalPears = artemPears + dimaPears;
+
+                TextBlockResult.Text = $"Всего яблок {totalApples}, а груш {totalPears}";
+                TextBlockResult.Visibility = Visibility.Visible;
+
+                // Блокировка полей ввода
+                TextBoxArtemApples.IsEnabled = false;
+                TextBoxArtemPears.IsEnabled = false;
+                TextBoxDimaApples.IsEnabled = false;
+                TextBoxDimaPears.IsEnabled = false;
+            }
+            else
+            {
+                MessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ButtonReset_Click(object sender, RoutedEventArgs e)
+        {
+            // Сброс формы
+            TextBoxArtemApples.Text = "";
+            TextBoxArtemPears.Text = "";
+            TextBoxDimaApples.Text = "";
+            TextBoxDimaPears.Text = "";
+            TextBlockResult.Visibility = Visibility.Hidden;
+
+            // Разблокировка полей ввода
+            TextBoxArtemApples.IsEnabled = true;
+            TextBoxArtemPears.IsEnabled = true;
+            TextBoxDimaApples.IsEnabled = true;
+            TextBoxDimaPears.IsEnabled = true;
+
+            // Сброс цвета фона
+            TextBoxArtemApples.Background = System.Windows.Media.Brushes.White;
+            TextBoxArtemPears.Background = System.Windows.Media.Brushes.White;
+            TextBoxDimaApples.Background = System.Windows.Media.Brushes.White;
+            TextBoxDimaPears.Background = System.Windows.Media.Brushes.White;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+<Window x:Class="Lab4.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Лабораторная работа №4" Height="300" Width="400">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Артём -->
+        <Border BorderBrush="Black" BorderThickness="0,0,0,1" Grid.Row="0" HorizontalAlignment="Center" Height="17" VerticalAlignment="Center">
+            <Label Content="Артём" FontWeight="Bold" FontStyle="Normal" HorizontalAlignment="Center" Padding="0,0,0,2"/>
+        </Border>
+
+        <Label Content="Яблоки:" Grid.Row="1" Grid.Column="0" Margin="5,0,0,0" HorizontalAlignment="Left"/>
+        <TextBox x:Name="TextBoxArtemApples" Grid.Row="1" Grid.Column="0" Margin="70,0,5,0" ToolTip="Введите количество" HorizontalAlignment="Stretch" TextChanged="TextBox_TextChanged"/>
+
+        <Label Content="Груши:" Grid.Row="2" Grid.Column="0" Margin="5,0,0,0" HorizontalAlignment="Left"/>
+        <TextBox x:Name="TextBoxArtemPears" Grid.Row="2" Grid.Column="0" Margin="70,0,5,0" ToolTip="Введите количество" HorizontalAlignment="Stretch" TextChanged="TextBox_TextChanged"/>
+
+        <!-- Дима -->
+        <Border BorderBrush="Black" BorderThickness="0,0,0,1" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" Height="17" VerticalAlignment="Center">
+            <Label Content="Дима" FontWeight="Bold" FontStyle="Normal" HorizontalAlignment="Center" Padding="0,0,0,2"/>
+        </Border>
+
+        <Label Content="Яблоки:" Grid.Row="1" Grid.Column="1" Margin="5,0,0,0" HorizontalAlignment="Left"/>
+        <TextBox x:Name="TextBoxDimaApples" Grid.Row="1" Grid.Column="1" Margin="70,0,5,0" ToolTip="Введите количество" HorizontalAlignment="Stretch" TextChanged="TextBox_TextChanged"/>
+
+        <Label Content="Груши:" Grid.Row="2" Grid.Column="1" Margin="5,0,0,0" HorizontalAlignment="Left"/>
+        <TextBox x:Name="TextBoxDimaPears" Grid.Row="2" Grid.Column="1" Margin="70,0,5,0" ToolTip="Введите количество" HorizontalAlignment="Stretch" TextChanged="TextBox_TextChanged"/>
+
+        <!-- Кнопки -->
+        <Button x:Name="ButtonCount" Content="СЧЁТ" Grid.Row="3" Grid.Column="0" Margin="5" Click="ButtonCount_Click" Grid.ColumnSpan="2"/>
+        <Button x:Name="ButtonReset" Content="СБРОС" Grid.Row="4" Grid.Column="0" Margin="5" Click="ButtonReset_Click" Grid.ColumnSpan="2"/>
+
+        <!-- Блок для результата -->
+        <TextBlock x:Name="TextBlockResult" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="5"
+                   FontStyle="Italic" FontWeight="Bold" Visibility="Hidden"/>
+    </Grid>
+</Window>
