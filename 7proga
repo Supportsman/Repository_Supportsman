@@ -1,0 +1,387 @@
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+
+namespace lab7
+{
+    public partial class MainWindow : Window
+    {
+        private Random random = new Random();
+        private int _randomButtonClickCount = 0;
+        private const int MaxAttempts = 9;
+        private bool _updatingControls = false;
+
+
+        private readonly int[] possibleRedValues = { 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 255 };
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            InitializeApplication();
+        }
+
+        private void InitializeApplication()
+        {
+            OpacityScrollBar.Value = 100;
+            ColorRectangle.Opacity = 1.0;
+            ColorRectangle.Fill = new SolidColorBrush(Colors.LightGray);
+
+            byte red = (byte)possibleRedValues[random.Next(possibleRedValues.Length)];
+            byte green = (byte)random.Next(0, 256);
+            byte blue = (byte)random.Next(0, 256);
+
+            RedSlider.Value = red;
+            GreenSlider.Value = green;
+            BlueSlider.Value = blue;
+
+            UpdateColor();
+            UpdateRemainingAttemptsText();
+            UpdateRandomButtonState();
+            UpdateTextVisibility(ColorRectangle.Opacity);
+            TextLabel.Visibility = Visibility.Hidden;
+            TextLabel.Opacity = 1;
+
+            RedTextBox.PreviewTextInput += NumberValidationTextBox;
+            GreenTextBox.PreviewTextInput += NumberValidationTextBox;
+            BlueTextBox.PreviewTextInput += NumberValidationTextBox;
+
+            RedTextBox.LostFocus += RedTextBox_LostFocus;
+            RedTextBox.PreviewKeyDown += RedTextBox_PreviewKeyDown;
+            GreenTextBox.LostFocus += ColorTextBox_LostFocus;
+            BlueTextBox.LostFocus += ColorTextBox_LostFocus;
+
+            OpacityValueText.Text = $"Прозрачность: {OpacityScrollBar.Value}%";
+        }
+
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
+        {
+            if (!char.IsDigit(e.Text, 0)) e.Handled = true;
+        }
+
+        private void RedTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ApplyRoundedRedValue();
+                e.Handled = true;
+            }
+        }
+
+        private void RedTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ApplyRoundedRedValue();
+        }
+
+        private void ApplyRoundedRedValue()
+        {
+            if (string.IsNullOrWhiteSpace(RedTextBox.Text))
+            {
+                RedTextBox.Text = "0";
+            }
+            if (int.TryParse(RedTextBox.Text, out int value))
+            {
+                value = Math.Max(0, Math.Min(255, value));
+                byte roundedValue = RoundToNearest25(value);
+
+                _updatingControls = true;
+                RedSlider.Value = roundedValue;
+                RedTextBox.Text = roundedValue.ToString();
+                _updatingControls = false;
+
+                UpdateColor();
+            }
+        }
+
+        private void ColorTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is TextBox tb)) return;
+            if (string.IsNullOrWhiteSpace(tb.Text))
+            {
+                tb.Text = "0";
+            }
+            if (int.TryParse(tb.Text, out int value))
+            {
+                value = Math.Max(0, Math.Min(255, value));
+                if (tb == GreenTextBox)
+                {
+                    GreenSlider.Value = value;
+                }
+                else if (tb == BlueTextBox)
+                {
+                    BlueSlider.Value = value;
+                }
+                UpdateColor();
+            }
+        }
+
+        private void ColorTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_updatingControls || !(sender is TextBox tb) || string.IsNullOrEmpty(tb.Text)) return;
+            if (tb != RedTextBox && int.TryParse(tb.Text, out int value))
+            {
+                value = Math.Max(0, Math.Min(255, value));
+                if (tb == GreenTextBox)
+                {
+                    GreenSlider.Value = value;
+                }
+                else if (tb == BlueTextBox)
+                {
+                    BlueSlider.Value = value;
+                }
+                UpdateColor();
+            }
+        }
+
+        private void OpacityScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (ColorRectangle == null || OpacityScrollBar == null || OpacityValueText == null) return;
+            double newOpacity = OpacityScrollBar.Value / 100.0;
+            ColorRectangle.Opacity = newOpacity;
+            OpacityValueText.Text = $"Прозрачность: {OpacityScrollBar.Value:F0}%";
+            UpdateTextVisibility(newOpacity);
+            UpdateRandomButtonState();
+        }
+
+        private void UpdateTextVisibility(double opacity)
+        {
+            if (TextLabel == null) return;
+            TextLabel.Visibility = opacity < 1 ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        private void UpdateRemainingAttemptsText()
+        {
+            if (RemainingAttemptsText == null) return;
+            RemainingAttemptsText.Text = $"Осталось попыток: {MaxAttempts - _randomButtonClickCount}";
+        }
+
+        private void UpdateColor()
+        {
+            if (_updatingControls || !IsLoaded) return;
+            try
+            {
+                _updatingControls = true;
+                byte red = (byte)RedSlider.Value;
+                byte green = (byte)GreenSlider.Value;
+                byte blue = (byte)BlueSlider.Value;
+                Color newColor = Color.FromRgb(red, green, blue);
+                AnimateColorChange(newColor);
+                if (RedTextBox.IsFocused == false)
+                    RedTextBox.Text = red.ToString();
+                GreenTextBox.Text = green.ToString();
+                BlueTextBox.Text = blue.ToString();
+                if (TextLabel != null)
+                {
+                    Color textColor = Color.FromRgb(
+                        (byte)(255 - red),
+                        (byte)(255 - green),
+                        (byte)(255 - blue));
+                    TextLabel.Foreground = new SolidColorBrush(textColor);
+                }
+            }
+            finally
+            {
+                _updatingControls = false;
+            }
+        }
+
+        private void AnimateColorChange(Color targetColor)
+        {
+            if (ColorRectangle == null) return;
+            var animation = new ColorAnimation
+            {
+                To = targetColor,
+                Duration = TimeSpan.FromSeconds(0.4),
+                EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut }
+            };
+            var currentBrush = ColorRectangle.Fill as SolidColorBrush;
+            if (currentBrush == null || currentBrush.IsFrozen)
+            {
+                currentBrush = new SolidColorBrush(Colors.LightGray);
+                ColorRectangle.Fill = currentBrush;
+            }
+            currentBrush.BeginAnimation(SolidColorBrush.ColorProperty, animation);
+        }
+
+        private void UpdateRandomButtonState()
+        {
+            if (RandomColorButton == null || ColorRectangle == null) return;
+            RandomColorButton.IsEnabled = _randomButtonClickCount < MaxAttempts &&
+                                       ColorRectangle.Opacity > 0.24;
+        }
+
+        private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (OpacityScrollBar == null) return;
+            double delta = e.Delta > 0 ? 5 : -5;
+            double newValue = Math.Max(OpacityScrollBar.Minimum,
+                                    Math.Min(OpacityScrollBar.Maximum,
+                                            OpacityScrollBar.Value + delta));
+            OpacityScrollBar.Value = newValue;
+        }
+
+        private void RedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_updatingControls || !IsLoaded) return;
+
+            byte roundedValue = RoundToNearest25((int)e.NewValue);
+
+            if (roundedValue != e.NewValue)
+            {
+                _updatingControls = true;
+                RedSlider.Value = roundedValue;
+                if (!RedTextBox.IsFocused)
+                    RedTextBox.Text = roundedValue.ToString();
+                _updatingControls = false;
+            }
+
+            UpdateColor();
+        }
+
+        private void GreenSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_updatingControls || !IsLoaded) return;
+            UpdateColor();
+        }
+
+        private void BlueSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_updatingControls || !IsLoaded) return;
+            UpdateColor();
+        }
+
+        private void RandomColorButton_Click(object sender, RoutedEventArgs e)
+        {
+            byte red = (byte)possibleRedValues[random.Next(possibleRedValues.Length)];
+            byte green = (byte)random.Next(0, 256);
+            byte blue = (byte)random.Next(0, 256);
+
+            double randomOpacity = random.Next(25, 101);
+
+            _updatingControls = true;
+            RedSlider.Value = red;
+            GreenSlider.Value = green;
+            BlueSlider.Value = blue;
+            OpacityScrollBar.Value = randomOpacity;
+            _updatingControls = false;
+
+            UpdateColor();
+            _randomButtonClickCount++;
+            UpdateRemainingAttemptsText();
+            UpdateRandomButtonState();
+        }
+
+        private byte RoundToNearest25(int value)
+        {
+            value = Math.Max(0, Math.Min(255, value));
+
+
+            if (value > 250) return 255;
+
+
+            int rounded = (int)(Math.Round(value / 25.0) * 25);
+            return (byte)Math.Min(rounded, 250);
+        }
+    }
+}
+
+
+<Window x:Name="window1" x:Class="lab7.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:lab7"
+        mc:Ignorable="d"
+        Title="Погирейчик Артём Лаба7" Height="400" Width="700"
+        MouseWheel="Window_MouseWheel">
+
+    <Grid x:Name="windowl">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Верхняя панель с прямоугольником и регулятором прозрачности -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Rectangle x:Name="ColorRectangle" Width="250" Height="120" Fill="LightGray" Margin="0,0,20,0"/>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <ScrollBar x:Name="OpacityScrollBar" Width="120" Height="20" Minimum="0" Maximum="100" 
+                           Value="100" Orientation="Horizontal" Background="#FFF5F5F5"
+                           ValueChanged="OpacityScrollBar_ValueChanged" SmallChange="1" RenderTransformOrigin="0.5,0.5">
+                    <ScrollBar.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="90"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </ScrollBar.RenderTransform>
+                </ScrollBar>
+                <TextBlock x:Name="OpacityValueText" Margin="10,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Центральная панель с ползунками цветов -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Красный канал -->
+            <StackPanel Margin="10" Width="180">
+                <Label Content="Red" Foreground="#FFEE1414" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <Slider x:Name="RedSlider" Minimum="0" Maximum="255" Value="0" Height="30" Margin="0,5"
+                       ValueChanged="RedSlider_ValueChanged" TickFrequency="25"  TickPlacement="BottomRight" IsSnapToTickEnabled="True"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Label Content="0" Margin="0,0,10,0"/>
+                    <TextBox x:Name="RedTextBox" Width="50" Height="25" 
+                            PreviewKeyDown="RedTextBox_PreviewKeyDown"
+                            LostFocus="RedTextBox_LostFocus"
+                            TextChanged="ColorTextBox_TextChanged"/>
+                    <Label Content="255" Margin="10,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Зелёный канал -->
+            <StackPanel Margin="10" Width="180">
+                <Label Content="Green" Foreground="Green" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <Slider x:Name="GreenSlider" Minimum="0" Maximum="255" Value="0" Height="30" Margin="0,5"
+                       ValueChanged="GreenSlider_ValueChanged"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Label Content="0" Margin="0,0,10,0"/>
+                    <TextBox x:Name="GreenTextBox" Width="50" Height="25"
+                            LostFocus="ColorTextBox_LostFocus"
+                            TextChanged="ColorTextBox_TextChanged"/>
+                    <Label Content="255" Margin="10,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Синий канал -->
+            <StackPanel Margin="10" Width="180">
+                <Label Content="Blue" Foreground="Blue" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <Slider x:Name="BlueSlider" Minimum="0" Maximum="255" Value="0" Height="30" Margin="0,5"
+                       ValueChanged="BlueSlider_ValueChanged"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Label Content="0" Margin="0,0,10,0"/>
+                    <TextBox x:Name="BlueTextBox" Width="50" Height="25"
+                            LostFocus="ColorTextBox_LostFocus"
+                            TextChanged="ColorTextBox_TextChanged"/>
+                    <Label Content="255" Margin="10,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Нижняя панель с кнопкой и текстом -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button x:Name="RandomColorButton" Content="Рандом" 
+                   Width="120" Height="30" Margin="0,0,20,0" 
+                   Click="RandomColorButton_Click"/>
+            <TextBlock x:Name="RemainingAttemptsText" VerticalAlignment="Center" FontWeight="Bold"/>
+        </StackPanel>
+
+        <Label x:Name="TextLabel" Content="Hello!" 
+               FontSize="24" VerticalAlignment="Center" 
+               Visibility="Hidden" Opacity="1" FontWeight="Bold" FontStyle="Italic" Margin="160,-0,0,0"/>
+    </Grid>
+</Window>
