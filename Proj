@@ -1,0 +1,120 @@
+// Полный проект слишком объёмен, поэтому создадим основу (MVP) со следующими элементами:
+// - Окно регистрации/входа
+// - Хранилище пользователей (JSON)
+// - WelcomeWindow с описанием программы
+// - Главное меню с кнопками уровней
+// - Заготовка для окна уровней с теорией и чек-листами
+
+// Структура:
+// - App.xaml / App.xaml.cs
+// - MainWindow.xaml: логин/регистрация
+// - WelcomeWindow.xaml: первое знакомство
+// - MenuWindow.xaml: переход на уровни
+// - LevelWindow.xaml: теория и чек-листы
+// - Models: User, ChecklistTask
+// - Services: UserManager
+// - Data: users.json
+
+// Файл: Models/User.cs
+using System.Collections.Generic;
+
+namespace MicrogreensGuide.Models
+{
+    public class User
+    {
+        public string Username { get; set; }
+        public bool IsFirstTime { get; set; } = true;
+        public Dictionary<string, List<ChecklistTask>> Progress { get; set; } = new();
+    }
+
+    public class ChecklistTask
+    {
+        public string Title { get; set; }
+        public bool IsCompleted { get; set; }
+        public string FilePath { get; set; }
+    }
+}
+
+// Файл: Services/UserManager.cs
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using MicrogreensGuide.Models;
+
+namespace MicrogreensGuide.Services
+{
+    public static class UserManager
+    {
+        private static string dataPath = "Data/users.json";
+
+        public static List<User> LoadUsers()
+        {
+            if (!File.Exists(dataPath)) return new();
+            var json = File.ReadAllText(dataPath);
+            return JsonSerializer.Deserialize<List<User>>(json) ?? new();
+        }
+
+        public static void SaveUsers(List<User> users)
+        {
+            var json = JsonSerializer.Serialize(users);
+            File.WriteAllText(dataPath, json);
+        }
+    }
+}
+
+// Файл: MainWindow.xaml (регистрация/вход)
+<Window x:Class="MicrogreensGuide.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Вход в гид" Height="300" Width="400">
+    <StackPanel Margin="20">
+        <TextBox x:Name="UsernameBox" PlaceholderText="Имя пользователя" Margin="0,0,0,10" />
+        <Button Content="Войти / Зарегистрироваться" Click="Login_Click" />
+    </StackPanel>
+</Window>
+
+// Файл: MainWindow.xaml.cs
+using System.Linq;
+using System.Windows;
+using MicrogreensGuide.Models;
+using MicrogreensGuide.Services;
+
+namespace MicrogreensGuide
+{
+    public partial class MainWindow : Window
+    {
+        private List<User> users;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            users = UserManager.LoadUsers();
+        }
+
+        private void Login_Click(object sender, RoutedEventArgs e)
+        {
+            var name = UsernameBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            var user = users.FirstOrDefault(u => u.Username == name);
+            if (user == null)
+            {
+                user = new User { Username = name };
+                users.Add(user);
+                UserManager.SaveUsers(users);
+            }
+
+            if (user.IsFirstTime)
+            {
+                var welcome = new WelcomeWindow(user);
+                welcome.Show();
+            }
+            else
+            {
+                var menu = new MenuWindow(user);
+                menu.Show();
+            }
+            Close();
+        }
+    }
+}
